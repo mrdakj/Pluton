@@ -1,4 +1,4 @@
-# File Manager
+# Pluton
 ## File manager written in C++ (functional paradigm)
 
 Technologies: Qt
