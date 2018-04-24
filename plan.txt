@@ -1,0 +1,37 @@
+What file manager should be able to do:
+ls
+cd
+change name
+create file
+delete file
+
+Mozemo da imamo 2 klase
+1) one class which has data, and one class for data manipulation
+2) one class for everything
+
+
+View
+// class Controller
+// const string absolute_path;
+// metode:
+// immer::vector<?> ls(immer::vector<File*>, bool sort);
+// Controller cd(const string path);
+// void change_name(const string name, const string new_name);
+
+class Current_dir 
+const string absolute_path;
+const immer::vector<File*> data;
+methods:
+immer::vector<File*>& ls();
+Controller cd(const string path);
+Controller change_name(const string name, const string new_name);
+
+class File
+polja:
+const string ime;
+const char type (d, r);
+const unsigned size;
+methods:
+File change_name(const string);
+
+How to destroy object before it goes out of the scope?
