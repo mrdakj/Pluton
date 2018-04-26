@@ -5,7 +5,6 @@ change name
 create file
 delete file
 
-Mozemo da imamo 2 klase
 1) one class which has data, and one class for data manipulation
 2) one class for everything
 
@@ -20,14 +19,13 @@ View
 
 class Current_dir 
 const string absolute_path;
-const immer::vector<File*> data;
+const immer::vector<File*> data; or const immer::vector<int> data;
 methods:
 immer::vector<File*>& ls();
 Controller cd(const string path);
 Controller change_name(const string name, const string new_name);
 
 class File
-polja:
 const string ime;
 const char type (d, r);
 const unsigned size;
