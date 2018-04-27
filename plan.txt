@@ -5,23 +5,11 @@ change name
 create file
 delete file
 
-1) one class which has data, and one class for data manipulation
-2) one class for everything
-
-
-View
-// class Controller
-// const string absolute_path;
-// metode:
-// immer::vector<?> ls(immer::vector<File*>, bool sort);
-// Controller cd(const string path);
-// void change_name(const string name, const string new_name);
-
 class Current_dir 
 const string absolute_path;
-const immer::vector<File*> data; or const immer::vector<int> data;
+const immer::vector<File> data;
 methods:
-immer::vector<File*>& ls();
+immer::vector<File> ls();
 Current_dir cd(const string path);
 Current_dir change_name(const string name, const string new_name);
 
