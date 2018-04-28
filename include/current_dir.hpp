@@ -14,10 +14,11 @@ namespace fs = std::experimental::filesystem;
 class Current_dir {
 private:
 
-	 /* fs::path se izmedju ostalog postara i o greskama 
-	  * pri inicijalizaciji tipa str(foo///bar/baz) -> path(foo/bar/baz) */
 	fs::path path;
 	immer::vector<File> data;
+
+	void rename_on_system(const std::string& file_name, const std::string& new_file_name) const;
+	int file_search(const std::string& file_name) const;
 
 public:
 	Current_dir(const std::string& path, immer::vector<File> data);
@@ -30,7 +31,8 @@ public:
 
 	Current_dir rename(const std::string& file_name, const std::string& new_file_name) &&;
 
-	fs::path getPath();
+
+	const fs::path& get_path() const;
 };
 
 #endif /* CURRENT_DIR_HPP */

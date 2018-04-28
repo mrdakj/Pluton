@@ -1,18 +1,19 @@
-#include "current_dir.hpp"
-#include "file.hpp"
+#include "../include/current_dir.hpp"
+#include "../include/file.hpp"
+#include <experimental/filesystem>
+#include <iostream>
 
 namespace fs = std::experimental::filesystem;
 
 Current_dir::Current_dir(const std::string& path, immer::vector<File> data)
 	: path(path), data(std::move(data))
 {
-	/* TODO FIX proveru greske ako nije dir dobar */
+	/* TODO FIX check error */
 	try  {
 		if (!fs::is_directory(path)) {
 			std::cerr << "Error: " << path << " not a directory" << std::endl;
 			exit(EXIT_FAILURE);
 		}
-
 	} catch (const fs::filesystem_error &e) {
 		std::cerr << "Error while instanciating current_dir: " << std::endl;
 		std::cerr << e.what() << std::endl;
@@ -23,14 +24,12 @@ Current_dir::Current_dir(const std::string& path, immer::vector<File> data)
 Current_dir::Current_dir(const std::string& path)
 	: path(path)
 {
-
-	/* TODO FIX proveru greske ako nije dir dobar */
+	/* TODO FIX check error */
 	try  {
 		if (!fs::is_directory(path)) {
 			std::cerr << "Error: " << path << " not a directory" << std::endl;
 			exit(EXIT_FAILURE);
 		}
-
 	} catch (const fs::filesystem_error &e) {
 		std::cerr << "Error while instanciating current_dir: " << std::endl;
 		std::cerr << e.what() << std::endl;
@@ -42,7 +41,7 @@ Current_dir::Current_dir(const std::string& path)
 		std::string file_name = p.path().filename().string();
 		char type = (fs::is_directory(p)) ? 'd' : 'r';
 		unsigned size = (type == 'd') ? 0 : fs::file_size(p);
-		data = std::move(data).push_back(File(this, file_name, type, size));
+		data = std::move(data).push_back(File(file_name, type, size));
 	}
 }
 
@@ -54,32 +53,55 @@ immer::vector<File> Current_dir::ls() const
 Current_dir Current_dir::cd(const std::string& dir) const
 {
 	//FIX throw 
-	if (!fs::is_directory(dir))
+	fs::path dir_path = path / dir;
+	if (!fs::is_directory(dir_path))
 		throw "nod a dir";
-	// operator / makes path with '/'
-	return Current_dir(path / dir);
+	return Current_dir(dir_path);
+}
+
+void Current_dir::rename_on_system(const std::string& file_name, const std::string& new_file_name) const
+{
+	try { 
+		// side effect?!
+		fs::rename(path / file_name, path / new_file_name);
+	}
+	catch(const fs::filesystem_error& e) {
+		// TODO -> what to do? 
+		std::cerr << "Error while renaming the file:" << std::endl;
+		std::cerr << e.what() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
+int Current_dir::file_search(const std::string& file_name) const
+{
+	auto it = std::find_if(data.begin(), data.end(), [&](auto&& f) { return f.get_name() == file_name; });
+	return std::distance(data.begin(), it);
 }
 
 Current_dir Current_dir::rename(const std::string& file_name, const std::string& new_file_name) const &
 {
-	auto it = std::find_if(data.begin(), data.end(), [&](auto&& f) { return f.get_name() == file_name; });
-	int index = std::distance(data.begin(), it);
+	rename_on_system(file_name, new_file_name);
+
+	int index = file_search(file_name);
 
 	return Current_dir(path, data.set(index, data[index].rename(new_file_name)));
 }
 
 Current_dir Current_dir::rename(const std::string& file_name, const std::string& new_file_name) &&
 {
+	rename_on_system(file_name, new_file_name);
+
 	Current_dir d(std::forward<Current_dir>(*this));
 
-	auto it = std::find_if(data.begin(), data.end(), [&](auto&& f) { return f.get_name() == file_name; });
-	int index = std::distance(data.begin(), it);
+	int index = file_search(file_name);
 
 	d.data = std::move(d.data).set(index, data[index].rename(new_file_name));
 
 	return d;
 }
 
-fs::path Current_dir::getPath() {
+const fs::path& Current_dir::get_path() const
+{
 	return path;
 }
