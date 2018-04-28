@@ -13,6 +13,9 @@ namespace fs = std::experimental::filesystem;
 
 class Current_dir {
 private:
+
+	 /* fs::path se izmedju ostalog postara i o greskama 
+	  * pri inicijalizaciji tipa str(foo///bar/baz) -> path(foo/bar/baz) */
 	fs::path path;
 	immer::vector<File> data;
 

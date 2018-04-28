@@ -8,11 +8,13 @@ File::File(Current_dir* parent, const std::string& name, char type, unsigned siz
 
 File File::rename(const std::string& new_name) &&
 {
-	// propratni efekat?!
+	// propratni efekat(i)?!
+	
 	fs::path parent_path = parent->getPath();
 	
 	try 
 	{ 
+		/* Operator '/' spaja u novi path ocekivano */ 
 		fs::rename(parent_path / name, parent_path / new_name);
 	}
 	catch(const fs::filesystem_error& e) 
@@ -30,12 +32,13 @@ File File::rename(const std::string& new_name) &&
 
 File File::rename(const std::string& new_name) const &
 {
+	// propratni efekat(i)?!
 
 	fs::path parent_path = parent->getPath();
 
-	// propratni efekat?!
 	try 
 	{
+		/* Operator '/' spaja u novi path ocekivano */ 
 		fs::rename(parent_path / name, parent_path / new_name);
 	} 
 	catch (const fs::filesystem_error& e) 

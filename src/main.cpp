@@ -10,7 +10,11 @@ int main()
 
 	/* test_dir je direktorijum za testiranje */
 	Current_dir d("test_dir");
+
+	/* test_dir/test_subdir -> test_dir/renamed_test_subdir */
 	Current_dir d2 = d.rename("test_subdir", "renamed_test_subdir");
+
+	/* test_dir/renamed_test_subdir -> test_dir/test_subdir */
 	Current_dir d3 = d2.rename("renamed_test_subdir", "test_subdir");
 
 	immer::for_each(d.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
