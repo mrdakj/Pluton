@@ -1,14 +1,42 @@
 #include "current_dir.hpp"
 #include "file.hpp"
 
+namespace fs = std::experimental::filesystem;
+
 Current_dir::Current_dir(const std::string& path, immer::vector<File> data)
 	: path(path), data(std::move(data))
 {
+	/* TODO FIX proveru greske ako nije dir dobar */
+	try  {
+		if (!fs::is_directory(path)) {
+			std::cerr << "Error: " << path << " not a directory" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
+	} catch (const fs::filesystem_error &e) {
+		std::cerr << "Error while instanciating current_dir: " << std::endl;
+		std::cerr << e.what() << std::endl;
+		exit(EXIT_FAILURE);
+	}
 }
 
 Current_dir::Current_dir(const std::string& path)
 	: path(path)
 {
+
+	/* TODO FIX proveru greske ako nije dir dobar */
+	try  {
+		if (!fs::is_directory(path)) {
+			std::cerr << "Error: " << path << " not a directory" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
+	} catch (const fs::filesystem_error &e) {
+		std::cerr << "Error while instanciating current_dir: " << std::endl;
+		std::cerr << e.what() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
 	//FIX make more functional
 	for (auto & p : fs::directory_iterator(path)) {
 		std::string file_name = p.path().filename().string();
