@@ -22,7 +22,17 @@ public:
 	File rename(const std::string& new_name) &&
 	{
 		// propratni efekat?!
-		fs::rename(name, new_name);
+		try 
+		{ 
+			fs::rename(name, new_name);
+		}
+		catch(const fs::filesystem_error& e) 
+		{
+			// TODO -> Sta kod greske
+			std::cerr << "Error while renaming the file:" << std::endl;
+			std::cerr << e.what() << std::endl;
+			exit(EXIT_FAILURE);
+		}
 		
 		File tmp(std::forward<File>(*this));
 		tmp.name = new_name;
@@ -32,7 +42,19 @@ public:
 	File rename(const std::string& new_name) const &
 	{
 		// propratni efekat?!
-		fs::rename(name, new_name);
+		try 
+		{
+			fs::rename(name, new_name);
+		} 
+		catch (const fs::filesystem_error& e) 
+		{
+			// TODO -> Sta kod greske
+			std::cerr << "Error while renaming the file:" << std::endl;
+			std::cerr << e.what() << std::endl;
+			exit(EXIT_FAILURE);
+		}	
+
+
 		return File(new_name, type, size); 
 	}
 

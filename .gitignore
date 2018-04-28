@@ -1,0 +1,7 @@
+# Executables
+pluton
+*.out
+
+# Compiled Object files
+*.o
+*.obj
