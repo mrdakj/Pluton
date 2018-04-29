@@ -4,10 +4,11 @@
 #include <iostream>
 #include <fstream>
 #include <range/v3/all.hpp>
+#include <iostream>
 
 namespace fs = std::experimental::filesystem;
 
-Current_dir::Current_dir(const std::string& path, immer::vector<File> data)
+Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> data)
 	: path(path), data(std::move(data))
 {
 	/* TODO FIX check error */
@@ -47,7 +48,7 @@ Current_dir::Current_dir(const std::string& path)
 	}
 }
 
-immer::vector<File> Current_dir::ls() const
+immer::flex_vector<File> Current_dir::ls() const
 {
 	return data;
 }
@@ -147,14 +148,24 @@ std::uintmax_t Current_dir::remove_from_system(const std::string& file_name) con
 
 Current_dir Current_dir::delete_file(const std::string& file_name) const &
 {
-	remove_from_system(file_name);
-	auto new_data_view = data | ranges::view::filter([&](auto&& f) { return f.get_name() != file_name; });
-	return Current_dir(path, immer::vector<File>(new_data_view.begin(), new_data_view.end()));
+	unsigned index = file_search(file_name);
+	if (index < data.size()) {
+		remove_from_system(file_name);
+		return Current_dir(path, data.erase(index));
+	}
+	else
+		return *this;
 }
 
 Current_dir Current_dir::delete_file(const std::string& file_name) &&
 {
-	remove_from_system(file_name);
-	auto new_data_view = std::move(data) | ranges::view::filter([&](auto&& f) { return f.get_name() != file_name; });
-	return Current_dir(path, immer::vector<File>(new_data_view.begin(), new_data_view.end()));
+	unsigned index = file_search(file_name);
+	if (index < data.size()) {
+		remove_from_system(file_name);
+		Current_dir dir(std::forward<Current_dir>(*this));
+		dir.data = std::move(dir.data).erase(index);
+		return dir;
+	}
+	else
+		return *this;
 }
