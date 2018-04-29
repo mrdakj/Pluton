@@ -22,6 +22,11 @@ const std::string& File::get_name() const
 	return name;
 }
 
+char File::get_type() const
+{
+	return type;
+}
+
 const std::string File::get_info() const
 {
 	std::ostringstream info;

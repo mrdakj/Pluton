@@ -18,7 +18,9 @@ private:
 	immer::vector<File> data;
 
 	void rename_on_system(const std::string& file_name, const std::string& new_file_name) const;
-	int file_search(const std::string& file_name) const;
+	void insert_on_system(const File& f) const;
+	std::uintmax_t remove_from_system(const std::string& file_name) const;
+	unsigned file_search(const std::string& file_name) const;
 
 public:
 	Current_dir(const std::string& path, immer::vector<File> data);
@@ -27,10 +29,16 @@ public:
 	immer::vector<File> ls() const;
 
 	Current_dir cd(const std::string& dir) const;
-	Current_dir rename(const std::string& file_name, const std::string& new_file_name) const &;
 
+	Current_dir rename(const std::string& file_name, const std::string& new_file_name) const &;
 	Current_dir rename(const std::string& file_name, const std::string& new_file_name) &&;
 
+	Current_dir insert_file(File&& f) const &;
+	Current_dir insert_file(File&& f) &&;
+
+
+	Current_dir delete_file(const std::string& file_name) const &;
+	Current_dir delete_file(const std::string& file_name) &&;
 
 	const fs::path& get_path() const;
 };

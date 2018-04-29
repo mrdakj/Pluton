@@ -21,6 +21,7 @@ public:
 	File rename(const std::string& new_name) const &;
 
 	const std::string& get_name() const;
+	char get_type() const;
 	const std::string get_info() const;
 };
 

@@ -2,6 +2,8 @@
 #include "../include/file.hpp"
 #include <experimental/filesystem>
 #include <iostream>
+#include <fstream>
+#include <range/v3/all.hpp>
 
 namespace fs = std::experimental::filesystem;
 
@@ -73,7 +75,7 @@ void Current_dir::rename_on_system(const std::string& file_name, const std::stri
 	}
 }
 
-int Current_dir::file_search(const std::string& file_name) const
+unsigned Current_dir::file_search(const std::string& file_name) const
 {
 	auto it = std::find_if(data.begin(), data.end(), [&](auto&& f) { return f.get_name() == file_name; });
 	return std::distance(data.begin(), it);
@@ -104,4 +106,55 @@ Current_dir Current_dir::rename(const std::string& file_name, const std::string&
 const fs::path& Current_dir::get_path() const
 {
 	return path;
+}
+
+
+void Current_dir::insert_on_system(const File& f) const
+{
+	// TODO check errors and check if a file already exists
+	if (f.get_type() == 'd')
+		fs::create_directory(path / f.get_name());
+	if (f.get_type() == 'r')
+		std::ofstream(path / f.get_name());
+}
+
+Current_dir Current_dir::insert_file(File&& f) const &
+{
+	if (file_search(f.get_name()) < data.size()) {
+		std::cerr << "file already exists" << std::endl;
+		return *this;
+	}
+	insert_on_system(f);
+	auto new_data = data.push_back(std::forward<File>(f));
+	return Current_dir(path, std::move(new_data));
+}
+
+Current_dir Current_dir::insert_file(File&& f) &&
+{
+	if (file_search(f.get_name()) < data.size()) {
+		std::cerr << "file already exists" << std::endl;
+		return *this;
+	}
+	insert_on_system(f);
+	auto new_data = std::move(data).push_back(std::forward<File>(f));
+	return Current_dir(path, std::move(new_data));
+}
+
+std::uintmax_t Current_dir::remove_from_system(const std::string& file_name) const
+{
+	return fs::remove_all(path / file_name);
+}
+
+Current_dir Current_dir::delete_file(const std::string& file_name) const &
+{
+	remove_from_system(file_name);
+	auto new_data_view = data | ranges::view::filter([&](auto&& f) { return f.get_name() != file_name; });
+	return Current_dir(path, immer::vector<File>(new_data_view.begin(), new_data_view.end()));
+}
+
+Current_dir Current_dir::delete_file(const std::string& file_name) &&
+{
+	remove_from_system(file_name);
+	auto new_data_view = std::move(data) | ranges::view::filter([&](auto&& f) { return f.get_name() != file_name; });
+	return Current_dir(path, immer::vector<File>(new_data_view.begin(), new_data_view.end()));
 }

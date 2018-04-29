@@ -20,6 +20,12 @@ int main()
 	// cd into dir
 	Current_dir d4 = d.cd("test_subdir");
 
+	// insert new file/dir
+	Current_dir d5 = d4.insert_file(File("new_dir", 'd'));
+
+	// delete file/dir
+	Current_dir d6 = d5.delete_file("new_dir");
+
 	immer::for_each(d.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
 	std::cout  << std::endl;
 
@@ -30,5 +36,11 @@ int main()
 	std::cout  << std::endl;
 
 	immer::for_each(d4.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
+	std::cout  << std::endl;
+
+	immer::for_each(d5.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
+	std::cout  << std::endl;
+
+	immer::for_each(d6.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
 	return 0;
 }
