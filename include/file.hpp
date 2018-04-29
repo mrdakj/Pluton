@@ -22,6 +22,7 @@ public:
 
 	const std::string& get_name() const;
 	char get_type() const;
+	unsigned get_size() const;
 	const std::string get_info() const;
 };
 

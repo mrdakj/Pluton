@@ -27,6 +27,11 @@ char File::get_type() const
 	return type;
 }
 
+unsigned File::get_size() const
+{
+	return size;
+}
+
 const std::string File::get_info() const
 {
 	std::ostringstream info;

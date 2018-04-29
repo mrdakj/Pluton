@@ -5,26 +5,31 @@
 #include "../include/file.hpp"
 #include "../include/current_dir.hpp"
 
+struct compare {
+    bool operator() (const File& lhs, const File& rhs) const{
+         return (lhs.get_name() < rhs.get_name());
+    }
+};
+
 int main()
 {
-
 	// test_dir is dir for testing
-	Current_dir d("test_dir");
+	Current_dir<compare> d("test_dir");
 
 	// test_dir/test_subdir -> test_dir/renamed_test_subdir
-	Current_dir d2 = d.rename("test_subdir", "renamed_test_subdir");
+	Current_dir<compare> d2 = d.rename(File("test_subdir", 'd'), "renamed_test_subdir");
 
 	// test_dir/renamed_test_subdir -> test_dir/test_subdir
-	Current_dir d3 = d2.rename("renamed_test_subdir", "test_subdir");
+	Current_dir<compare> d3 = d2.rename(File("renamed_test_subdir", 'd'), "test_subdir");
 
 	// cd into dir
-	Current_dir d4 = d.cd("test_subdir");
+	Current_dir<compare> d4 = d.cd("test_subdir");
 
 	// insert new file/dir
-	Current_dir d5 = d4.insert_file(File("new_dir", 'd'));
+	Current_dir<compare> d5 = d4.insert_file(File("new_dir", 'd'));
 
 	// delete file/dir
-	Current_dir d6 = d5.delete_file("new_dir");
+	Current_dir<compare> d6 = d5.delete_file(File("new_dir",'d'));
 
 	std::cout << "init Current_dir with test_dir" << std::endl;
 	immer::for_each(d.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
