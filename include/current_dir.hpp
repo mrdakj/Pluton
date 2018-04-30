@@ -9,32 +9,49 @@
 #include <fstream>
 #include <iostream>
 
+#define unused(x) ((void)x)
+
+template<class ForwardIt, class T, class Compare=std::less<>>
+ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})
+{
+    first = std::lower_bound(first, last, value, comp);
+    return first != last && !comp(value, *first) ? first : last;
+}
+
+unsigned binary_search(const std::string& name, immer::flex_vector<File> v)
+{
+	auto it = binary_find(v.begin(), v.end(), File(name), [](auto&& arg1, auto&& arg2) { return arg1.get_name() < arg2.get_name(); });
+
+    return std::distance(v.begin(), it);
+}
+
+unsigned binary_lower(const std::string& name, immer::flex_vector<File> v)
+{
+	auto it = std::lower_bound(v.begin(), v.end(), File(name), [](auto&& arg1, auto&& arg2) { return arg1.get_name() < arg2.get_name(); });
+
+    return std::distance(v.begin(), it);
+}
+
 
 namespace fs = std::experimental::filesystem;
 
-template <class Compare>
 class Current_dir {
 private:
-	Compare comp;
-
 	fs::path path;
-	immer::flex_vector<File> data;
+	immer::flex_vector<File> dirs;
+	immer::flex_vector<File> regular_files;
 
 	void rename_on_system(const File& f, const std::string& new_file_name) const;
-
 	void insert_on_system(const File& f) const;
 	std::uintmax_t remove_from_system(const File& f) const;
-	unsigned file_search(const File& f) const;
-	unsigned place_to_insert(const File& f) const;
-
 public:
 
-	Current_dir(const std::string& path, immer::flex_vector<File> data, const Compare& comp = Compare());
-	Current_dir(const std::string& path, const Compare& comp = Compare());
+	Current_dir(const std::string& path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files);
+	Current_dir(const std::string& path);
 
 	immer::flex_vector<File> ls() const;
 
-	Current_dir cd(const std::string& dir) const;
+	Current_dir cd(const File& dir) const;
 
 	Current_dir rename(const File& f, const std::string& new_file_name) const &;
 	Current_dir rename(const File& f, const std::string& new_file_name) &&;
@@ -49,9 +66,8 @@ public:
 	const fs::path& get_path() const;
 };
 
-template <class Compare>
-Current_dir<Compare>::Current_dir(const std::string& path, immer::flex_vector<File> data, const Compare& comp)
-	: comp(comp), path(path), data(std::move(data))
+Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files)
+	: path(path), dirs(std::move(dirs)), regular_files(std::move(regular_files))
 {
 	/* TODO FIX check error */
 	try  {
@@ -66,9 +82,8 @@ Current_dir<Compare>::Current_dir(const std::string& path, immer::flex_vector<Fi
 	}
 }
 
-template <class Compare>
-Current_dir<Compare>::Current_dir(const std::string& path, const Compare& comp)
-	: comp(comp), path(path)
+Current_dir::Current_dir(const std::string& path)
+	: path(path)
 {
 	/* TODO FIX check error */
 	try  {
@@ -84,33 +99,36 @@ Current_dir<Compare>::Current_dir(const std::string& path, const Compare& comp)
 
 	//FIX make more functional
 	for (auto & p : fs::directory_iterator(path)) {
+
 		std::string file_name = p.path().filename().string();
-		char type = (fs::is_directory(p)) ? 'd' : 'r';
-		unsigned size = (type == 'd') ? 0 : fs::file_size(p);
-		File f(file_name, type, size);
-		int index = place_to_insert(f);
-		data = std::move(data).insert(index,std::move(f));
+
+		if (fs::is_directory(p)) {
+			File f(file_name, 'd', std::distance(fs::directory_iterator(p), fs::directory_iterator{}));
+			unsigned index = binary_lower(f.get_name(), dirs);
+			dirs = std::move(dirs).insert(index,std::move(f));
+		}
+		else {
+			File f(file_name, 'r', fs::file_size(p));
+			unsigned index = binary_lower(f.get_name(), regular_files);
+			regular_files = std::move(regular_files).insert(index,std::move(f));
+		}
 	}
 }
 
-template <class Compare>
-immer::flex_vector<File> Current_dir<Compare>::ls() const
+immer::flex_vector<File> Current_dir::ls() const
 {
-	return data;
+	return dirs + regular_files;
 }
 
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::cd(const std::string& dir) const
+Current_dir Current_dir::cd(const File& dir) const
 {
-	//FIX throw 
-	fs::path dir_path = path / dir;
+	fs::path dir_path = path / dir.get_name();
 	if (!fs::is_directory(dir_path))
 		throw "nod a dir";
 	return Current_dir(dir_path);
 }
 
-template <class Compare>
-void Current_dir<Compare>::rename_on_system(const File& f, const std::string& new_file_name) const
+void Current_dir::rename_on_system(const File& f, const std::string& new_file_name) const
 {
 	try { 
 		// side effect?!
@@ -124,63 +142,49 @@ void Current_dir<Compare>::rename_on_system(const File& f, const std::string& ne
 	}
 }
 
-template<class ForwardIt, class T, class Compare=std::less<>>
-ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})
-{
-    first = std::lower_bound(first, last, value, comp);
-    return first != last && !comp(value, *first) ? first : last;
-}
 
-template <class Compare>
-unsigned Current_dir<Compare>::file_search(const File& f) const
-{
-	auto it = binary_find(data.begin(), data.end(), f, comp);
 
-    return std::distance(data.begin(), it);
-}
-
-template <class Compare>
-unsigned Current_dir<Compare>::place_to_insert(const File& f) const
-{
-	auto it = std::lower_bound(data.begin(), data.end(), f, comp);
-
-    return std::distance(data.begin(), it);
-}
-
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::rename(const File& f, const std::string& new_file_name) const &
+Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const &
 {
 	rename_on_system(f, new_file_name);
 
-	int index = file_search(f);
-	auto new_data = data.erase(index);
-	int new_place = place_to_insert(File(new_file_name, f.get_type(), f.get_size()));
-	new_data = std::move(new_data).insert(new_place, f.rename(new_file_name));
+	if (f.get_type() == 'd') {
+		unsigned index = binary_search(f.get_name(), dirs);
+		if (index < dirs.size()) {
+			auto new_data = dirs.erase(index);
+			int new_place = binary_lower(new_file_name, dirs);
+			new_data = std::move(new_data).insert(new_place, dirs[index].rename(new_file_name));
+			return Current_dir(path, std::move(new_data), regular_files);
+		}
+	}
+	else {
+		unsigned index = binary_search(f.get_name(), regular_files);
+		if (index < regular_files.size()) {
+			auto new_data = regular_files.erase(index);
+			int new_place = binary_lower(new_file_name, regular_files);
+			new_data = std::move(new_data).insert(new_place, regular_files[index].rename(new_file_name));
+			return Current_dir(path, dirs, std::move(new_data));
+		}
+	}
 
-	return Current_dir(path, std::move(new_data));
+	return *this;
 }
 
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::rename(const File& f, const std::string& new_file_name) &&
+Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) &&
 {
-	rename_on_system(f, new_file_name);
-	int index = file_search(f);
-	auto new_data = std::move(data).erase(index);
-	int new_place = place_to_insert(File(new_file_name, f.get_type(), f.get_size()));
-	new_data = std::move(new_data).insert(new_place, f.rename(new_file_name));
-
-	return Current_dir(path, std::move(new_data));
+	unused(f);
+	unused(new_file_name);
+	//TODO implement this
+	return *this;
 }
 
-template <class Compare>
-const fs::path& Current_dir<Compare>::get_path() const
+const fs::path& Current_dir::get_path() const
 {
 	return path;
 }
 
 
-template <class Compare>
-void Current_dir<Compare>::insert_on_system(const File& f) const
+void Current_dir::insert_on_system(const File& f) const
 {
 	// TODO check errors and check if a file already exists
 	if (f.get_type() == 'd')
@@ -189,74 +193,68 @@ void Current_dir<Compare>::insert_on_system(const File& f) const
 		std::ofstream(path / f.get_name());
 }
 
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::insert_file(File&& f) const &
+Current_dir Current_dir::insert_file(File&& f) const &
 {
 	insert_on_system(f);
-	int place = place_to_insert(f);
-
-	// Check if file with same name already exist in data vector 
-	// True -> Don't do any modifications and return same Current_dir object
-	// [TODO] When vector length is > 1 and file exist in folder -> index of file is at place + 1,
-	// [TODO] When vector length is == 1 and file exist in folder -> index of file is at place,
-	// [TODO] Because of that, there is need for double check ' || '
-	if (data[place].get_name() == f.get_name() || data[place + 1].get_name() == f.get_name())
-		return *this;
-
-	// False -> return new Current_dir object
-	auto new_data = data.insert(place, std::forward<File>(f));
-	return Current_dir(path, std::move(new_data));
+	if (f.get_type() == 'd') {
+		unsigned place = binary_lower(f.get_name(), dirs);
+		if (place < dirs.size() && dirs[place].get_name() == f.get_name()) {
+			std::cerr << "dir exists" << std::endl;
+			return *this;
+		}
+		auto new_data = dirs.insert(place, std::forward<File>(f));
+		return Current_dir(path, std::move(new_data), regular_files);
+	}
+	else {
+		unsigned place = binary_lower(f.get_name(), regular_files);
+		if (place < regular_files.size() && regular_files[place].get_name() == f.get_name()) {
+			std::cerr << "file exists" << std::endl;
+			return *this;
+		}
+		auto new_data = regular_files.insert(place, std::forward<File>(f));
+		return Current_dir(path, dirs, std::move(new_data));
+	}
 }
 
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::insert_file(File&& f) &&
+Current_dir Current_dir::insert_file(File&& f) &&
 {
-	insert_on_system(f);
-	int place = place_to_insert(f);
-
-	// Check if file with same name already exist in data vector 
-	// True -> Don't do any modifications and return same Current_dir object
-	// [TODO] When vector length is > 1 and file exist in folder -> index of file is at place + 1,
-	// [TODO] When vector length is == 1 and file exist in folder -> index of file is at place,
-	// [TODO] Because of that, there is need for double check ' || '
-	if (data[place].get_name() == f.get_name() || data[place + 1].get_name() == f.get_name())
-		return *this;
-
-	// False -> return new Current_dir object
-	auto new_data = std::move(data).insert(place, std::forward<File>(f));
-	return Current_dir(path, std::move(new_data));
+	unused(f);
+	//TODO implement this
+	return *this;
 }
 
-template <class Compare>
-std::uintmax_t Current_dir<Compare>::remove_from_system(const File& f) const
+std::uintmax_t Current_dir::remove_from_system(const File& f) const
 {
 	return fs::remove_all(path / f.get_name());
 }
 
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::delete_file(const File& f) const &
+Current_dir Current_dir::delete_file(const File& f) const &
 {
-	unsigned index = file_search(f);
-	if (index < data.size()) {
-		remove_from_system(f);
-		return Current_dir(path, data.erase(index));
+	remove_from_system(f);
+
+	if (f.get_type() == 'd') {
+		unsigned index = binary_search(f.get_name(), dirs);
+		if (index >= dirs.size()) {
+			std::cerr << "dir doesnt exist" << std::endl;
+			return *this;
+		}
+		return Current_dir(path, dirs.erase(index), regular_files);
 	}
-	else
-		return *this;
+	else {
+		unsigned index = binary_search(f.get_name(), regular_files);
+		if (index >= regular_files.size()) {
+			std::cerr << "regular file doesnt exist" << std::endl;
+			return *this;
+		}
+		return Current_dir(path, dirs, regular_files.erase(index));
+	}
 }
 
-template <class Compare>
-Current_dir<Compare> Current_dir<Compare>::delete_file(const File& f) &&
+Current_dir Current_dir::delete_file(const File& f) &&
 {
-	unsigned index = file_search(f);
-	if (index < data.size()) {
-		remove_from_system(f);
-		Current_dir dir(std::forward<Current_dir>(*this));
-		dir.data = std::move(dir.data).erase(index);
-		return dir;
-	}
-	else
-		return *this;
+	unused(f);
+	//TODO implement this
+	return *this;
 }
 
 #endif /* CURRENT_DIR_HPP */
