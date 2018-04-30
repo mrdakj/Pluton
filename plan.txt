@@ -1,23 +1,12 @@
-What file manager should be able to do:
-ls
-cd
-change name
-create file
-delete file
+TODO list:
 
-class Current_dir 
-const string absolute_path;
-const immer::vector<File> data;
-methods:
-immer::vector<File> ls();
-Current_dir cd(const string path);
-Current_dir change_name(const string name, const string new_name);
-
-class File
-const string ime;
-const char type (d, r);
-const unsigned size;
-methods:
-File change_name(const string);
-
-How to destroy object before it goes out of the scope?
+1. prebaciti iz include/current_dir.hpp definicije funkcija u src/current_dir.cpp
+2. Funkcije:  binary_find,  binary_search,  binary_lower  koje se nalaze u include/current_dir.hpp prebaciti u neki utility ili ih staviti u klasu i napraviti metode od njih
+3. Metode *_on_system mozda prebaciti u neku drugu klasu System
+4. Videti da li je bolje u metodama cd, rename, inset_file, delete_file, *_on_system koristiti File ili string za argument
+5. Implementirati metode && gde pise implement this
+6. popraviti metodu insert_file -> trenutno moze da insertuje fajl sa istim imenom kao dir iako to nije moguce na sistemu
+7. Razmisliti o promeni klase File (mozda neko nasledjivanje?)
+8. obrada gresaka
+9. TUI
+  
