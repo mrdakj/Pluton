@@ -4,6 +4,8 @@
 #include <iostream>
 #include "../include/file.hpp"
 #include "../include/current_dir.hpp"
+#include "../include/tui.hpp"
+#include <cppurses/cppurses.hpp>
 
 
 int main()
@@ -49,5 +51,10 @@ int main()
 	std::cout << "delete new_dir" << std::endl;
 	immer::for_each(d6.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
 
-	return 0;
+	File_manager_tui fm(d);	
+
+	cppurses::System sys;
+	sys.set_head(&fm);
+
+	return sys.run();
 }

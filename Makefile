@@ -1,7 +1,7 @@
 PROGRAM = pluton
 CXX     = g++
 CXXFLAGS = -std=c++17 -I include
-LDLIBS  = -lstdc++fs 
+LDLIBS  = -lstdc++fs -lncurses liblibcppurses.a 
 WFLAGS = -Wall -Wextra
 SRC_DIR = src
 OBJ_DIR = $(SRC_DIR)/obj
