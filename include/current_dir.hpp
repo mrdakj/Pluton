@@ -194,6 +194,16 @@ Current_dir<Compare> Current_dir<Compare>::insert_file(File&& f) const &
 {
 	insert_on_system(f);
 	int place = place_to_insert(f);
+
+	// Check if file with same name already exist in data vector 
+	// True -> Don't do any modifications and return same Current_dir object
+	// [TODO] When vector length is > 1 and file exist in folder -> index of file is at place + 1,
+	// [TODO] When vector length is == 1 and file exist in folder -> index of file is at place,
+	// [TODO] Because of that, there is need for double check ' || '
+	if (data[place].get_name() == f.get_name() || data[place + 1].get_name() == f.get_name())
+		return *this;
+
+	// False -> return new Current_dir object
 	auto new_data = data.insert(place, std::forward<File>(f));
 	return Current_dir(path, std::move(new_data));
 }
@@ -203,6 +213,16 @@ Current_dir<Compare> Current_dir<Compare>::insert_file(File&& f) &&
 {
 	insert_on_system(f);
 	int place = place_to_insert(f);
+
+	// Check if file with same name already exist in data vector 
+	// True -> Don't do any modifications and return same Current_dir object
+	// [TODO] When vector length is > 1 and file exist in folder -> index of file is at place + 1,
+	// [TODO] When vector length is == 1 and file exist in folder -> index of file is at place,
+	// [TODO] Because of that, there is need for double check ' || '
+	if (data[place].get_name() == f.get_name() || data[place + 1].get_name() == f.get_name())
+		return *this;
+
+	// False -> return new Current_dir object
 	auto new_data = std::move(data).insert(place, std::forward<File>(f));
 	return Current_dir(path, std::move(new_data));
 }
