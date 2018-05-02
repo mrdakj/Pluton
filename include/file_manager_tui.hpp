@@ -1,8 +1,10 @@
+#ifndef FILE_MANAGER_TUI
+#define FILE_MANAGER_TUI
+
 #include <cppurses/cppurses.hpp>
 #include "current_dir.hpp"
-
-#ifndef TUI
-#define TUI
+#include "fm_dirlist_menu.hpp"
+#include "fm_finfo.hpp"
 
 using namespace cppurses;
 
@@ -27,11 +29,13 @@ public:
 	Label& current_dir_path{this->make_child<Label>("")};
 	Blank_height& bs_cur_dir_after{this->make_child<Blank_height>(2)};
 
-	Menu& flisting{this->make_child<Menu>("Directory listing")};
+	Horizontal_layout& hlayout_dir_finfo{this->make_child<Horizontal_layout>()};
+	Fm_dirlist_menu& flisting{hlayout_dir_finfo.make_child<Fm_dirlist_menu>("Directory listing")};
+	Fm_finfo& file_info{hlayout_dir_finfo.make_child<Fm_finfo>()};
 
 };
 
+	/* Sloto's related to File_manager_tui */
+	sig::Slot<void()> chdir(File_manager_tui &fm, const std::string& dirname);
 
-sig::Slot<void()> Slot_chdir(File_manager_tui* fm, const std::string& dirname);
-
-#endif // TUI
+#endif // FILE_MANAGER_TUI
