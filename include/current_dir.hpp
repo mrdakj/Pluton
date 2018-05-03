@@ -46,6 +46,8 @@ public:
 	Current_dir delete_file(const File& f) &&;
 
 	const fs::path& get_path() const;
+
+	const File find_by_fname(const std::string &file_name) const;
 };
 
 #endif /* CURRENT_DIR_HPP */

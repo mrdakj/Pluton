@@ -1,6 +1,37 @@
-#include "../include/file_manager_tui.hpp"
+#include "../include/tui_file_manager.hpp"
 
 using namespace cppurses;
+
+
+/* Change directory slot */
+sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirname)
+{
+    //sig::Slot<void()> slot{[&pb] { pb.clicked(); }};
+    //slot.track(pb.destroyed);
+    //return slot;
+
+    sig::Slot<void()> slot{[&fm, dirname] {
+	    fm.set_directory(fm.curdir.cd(dirname));
+	    // exit(EXIT_FAILURE);
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
+sig::Slot<void()> change_file(File_manager_tui& fm)
+{
+    sig::Slot<void()> slot{[&fm] 
+    {
+	    std::string file_name = fm.flisting.get_selected_item_name();
+	    fm.file_info.set_file(fm.curdir.find_by_fname(file_name));
+    }};
+
+    slot.track(fm.flisting.destroyed);
+
+    return slot;
+}
  
 File_manager_tui::File_manager_tui(Current_dir& curdir) : curdir(curdir)
 {
@@ -52,20 +83,7 @@ void File_manager_tui::set_directory(const Current_dir& curdir)
 	for (std::size_t i = 0; i < old_size; i++)
 	       flisting.remove_item(0);	
 
-	this->current_dir_path.set_text("  Directory: " + fs::absolute(curdir.get_path()).string());
-}
+	flisting.selected_file_changed.connect(change_file(*this));	
 
-/* Change directory slot */
-sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirname)
-{
-    //sig::Slot<void()> slot{[&pb] { pb.clicked(); }};
-    //slot.track(pb.destroyed);
-    //return slot;
-
-    sig::Slot<void()> slot{[&fm, dirname] {
-	    fm.set_directory(fm.curdir.cd(dirname));
-	    // exit(EXIT_FAILURE);
-    }};
-
-    return slot;
+	this->current_dir_path.set_text("  Dir: " + fs::absolute(curdir.get_path()).string());
 }

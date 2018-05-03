@@ -1,14 +1,16 @@
-#ifndef FM_FINFO
-#define FM_FINFO
+#ifndef TUI_FM_FINFO
+#define TUI_FM_FINFO
 
 #include <cppurses/cppurses.hpp>
 #include "file.hpp"
+#include "current_dir.hpp"
 
 using namespace cppurses;
 
 class Fm_finfo : public Vertical_layout {
 
-	Label& title{this->make_child<Label>("File info")};
+
+	Label& title{this->make_child<Label>("Info")};
 	Blank_height& title_blank{this->make_child<Blank_height>(1)};
 
 	Label& file_name{this->make_child<Label>()};
@@ -19,6 +21,7 @@ class Fm_finfo : public Vertical_layout {
 
 	Label& file_size{this->make_child<Label>()};
 	Blank_height& blank_after_size{this->make_child<Blank_height>(1)};
+
 
 public:
 
@@ -31,4 +34,4 @@ public:
 };
 
 
-#endif
+#endif // TUI_FM_FINFO

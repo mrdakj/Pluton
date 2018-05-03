@@ -4,7 +4,7 @@
 #include <iostream>
 #include "../include/file.hpp"
 #include "../include/current_dir.hpp"
-#include "../include/file_manager_tui.hpp"
+#include "../include/tui_file_manager.hpp"
 #include <cppurses/cppurses.hpp>
 
 

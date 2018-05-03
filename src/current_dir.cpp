@@ -212,3 +212,32 @@ Current_dir Current_dir::delete_file(const File& f) &&
 }
 
 
+const File Current_dir::find_by_fname(const std::string &file_name) const
+{
+
+	auto num_of_files = regular_files.size();
+	if (num_of_files > 0) {	
+		auto index = binary_search(file_name, regular_files);
+		if (regular_files[index].get_name() == file_name)
+			return regular_files[index];
+	}
+
+	auto num_of_dirs = dirs.size();
+	if (num_of_dirs > 0) {	
+		auto index = binary_search(file_name, regular_files);
+		index = binary_search(file_name, dirs);
+
+		if (dirs[index].get_name() == file_name)
+			return dirs[index];
+
+		// if nothing found and num_of_dirs > 0 return first dir
+		return dirs[0];
+	}
+	
+	// if nothing found and num_of_files > 0 return first file
+	if (num_of_files > 0)
+		return regular_files[0];
+	
+	// If nothing found return empty file object
+	return File("");
+}

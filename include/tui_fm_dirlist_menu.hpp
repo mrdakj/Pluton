@@ -1,5 +1,5 @@
-#ifndef FM_DIRLIST_MENU
-#define FM_DIRLIST_MENU
+#ifndef TUI_FM_DIRLIST_MENU
+#define TUI_FM_DIRLIST_MENU
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -21,6 +21,8 @@ class Fm_dirlist_menu : public Vertical_layout {
 
     sig::Signal<void()>& add_item(Glyph_string label);
     sig::Signal<void()>& insert_item(Glyph_string label, std::size_t index);
+    sig::Signal<void()> selected_file_changed;
+
     void remove_item(std::size_t index);
 
     void select_up(std::size_t n = 1);
@@ -28,6 +30,7 @@ class Fm_dirlist_menu : public Vertical_layout {
     void select_item(std::size_t index);
 
     std::size_t size() const;
+   Glyph_string get_selected_item_name() const;
 
    protected:
     bool paint_event() override;
@@ -45,6 +48,7 @@ class Fm_dirlist_menu : public Vertical_layout {
                                   Point local,
                                   std::uint8_t device_id) override;
 
+
    private:
     struct Fm_dirlist_menu_item {
         explicit Fm_dirlist_menu_item(Push_button& ref);
@@ -56,6 +60,7 @@ class Fm_dirlist_menu : public Vertical_layout {
 
     std::vector<Fm_dirlist_menu_item> items_;
     std::size_t selected_index_{0};
+
 
     Label& title_;
     Blank_height& space1{this->make_child<Blank_height>(1)};
@@ -74,4 +79,4 @@ sig::Slot<void(std::size_t)> select_item(Fm_dirlist_menu& m);
 sig::Slot<void()> select_item(Fm_dirlist_menu& m, std::size_t index);
 
 
-#endif  // FM_DIRLIST_MENU
+#endif  // TUI_FM_DIRLIST_MENU

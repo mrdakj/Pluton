@@ -1,10 +1,10 @@
-#ifndef FILE_MANAGER_TUI
-#define FILE_MANAGER_TUI
+#ifndef TUI_FILE_MANAGER
+#define TUI_FILE_MANAGER
 
 #include <cppurses/cppurses.hpp>
 #include "current_dir.hpp"
-#include "fm_dirlist_menu.hpp"
-#include "fm_finfo.hpp"
+#include "tui_fm_dirlist_menu.hpp"
+#include "tui_fm_finfo.hpp"
 
 using namespace cppurses;
 
@@ -37,5 +37,6 @@ public:
 
 	/* Sloto's related to File_manager_tui */
 	sig::Slot<void()> chdir(File_manager_tui &fm, const std::string& dirname);
+	sig::Slot<void()> change_file(File_manager_tui &fm); 
 
-#endif // FILE_MANAGER_TUI
+#endif // TUI_FILE_MANAGER

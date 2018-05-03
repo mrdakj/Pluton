@@ -1,4 +1,5 @@
-#include "../include/fm_dirlist_menu.hpp"
+#include "../include/tui_fm_dirlist_menu.hpp"
+#include "../include/tui_fm_finfo.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -57,6 +58,9 @@ void Fm_dirlist_menu::remove_item(std::size_t index) {
     }
     this->remove_child(&items_[index].button.get());
     items_.erase(std::begin(items_) + index);
+	
+
+
     this->update();
 }
 
@@ -71,8 +75,6 @@ void Fm_dirlist_menu::select_up(std::size_t n) {
     }
 
     select_item(next_index);
-
-    this->update();
 }
 
 void Fm_dirlist_menu::select_down(std::size_t n) {
@@ -90,8 +92,6 @@ void Fm_dirlist_menu::select_down(std::size_t n) {
     }
 
     select_item(next_index);
-
-    this->update();
 }
 
 void Fm_dirlist_menu::select_item(std::size_t index) {
@@ -103,11 +103,20 @@ void Fm_dirlist_menu::select_item(std::size_t index) {
     } else {
         selected_index_ = index;
     }
+
+    selected_file_changed();
     this->update();
 }
 
 std::size_t Fm_dirlist_menu::size() const {
     return items_.size();
+}
+
+
+
+Glyph_string Fm_dirlist_menu::get_selected_item_name() const {
+	Push_button & tmpbut = items_[selected_index_].button;
+	return tmpbut.contents();
 }
 
 bool Fm_dirlist_menu::paint_event() {
@@ -202,3 +211,5 @@ sig::Slot<void()> select_item(Fm_dirlist_menu& m, std::size_t index) {
     slot.track(m.destroyed);
     return slot;
 }
+
+
