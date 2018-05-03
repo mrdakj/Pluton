@@ -77,23 +77,56 @@ immer::flex_vector<File> Current_dir::ls() const
 Current_dir Current_dir::cd(const File& dir) const
 {
 	fs::path dir_path = path / dir.get_name();
-	if (!fs::is_directory(dir_path)) {
+
+	bool is_dir;
+	try {
+		is_dir = fs::is_directory(dir_path);
+	} catch (const fs::filesystem_error& e) {
+		return *this;
+	}
+
+	if (!is_dir) {
 		throw "nod a dir";
 		return *this;
 	}
-	return Current_dir(dir_path);
+
+	Current_dir new_dir = *this;
+	try {
+		new_dir =  Current_dir(dir_path);
+	} catch (...) {
+		return *this;
+	}
+
+	return new_dir;
 }
 
 Current_dir Current_dir::cd(fs::path dir_path) const
 {
 	fs::path dpath = fs::absolute(dir_path);
 
-	if (!fs::is_directory(dpath)) {
+	bool is_dir;
+	try {
+		is_dir = fs::is_directory(dir_path);
+	} catch (const fs::filesystem_error& e) {
+		// TODO: Sending error to TUI -> Permission denied or something ..
+		return *this;
+	}
+
+	if (!is_dir) {
 		throw "nod a dir";
 		return *this;
 	}
 
-	return Current_dir(dpath);
+
+	Current_dir new_dir = *this;
+	try {
+		new_dir =  Current_dir(dpath);
+	} catch (const fs::filesystem_error &e) {
+		// TODO: Sending error to TUI -> Permission denied or something ..
+		return *this;
+	}
+
+	return new_dir;
 }
 
 void Current_dir::rename_on_system(const File& f, const std::string& new_file_name) const

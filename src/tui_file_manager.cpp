@@ -83,6 +83,7 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 	for (std::size_t i = 0; i < old_size; i++)
 	       flisting.remove_item(0);	
 
+	flisting.select_item(0);
 	flisting.selected_file_changed.connect(change_file(*this));	
 	flisting.esc_pressed.disconnect_all_slots();
 	flisting.esc_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));

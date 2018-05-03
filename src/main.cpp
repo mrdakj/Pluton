@@ -28,6 +28,9 @@ int main()
 	// delete file/dir
 	Current_dir d6 = d5.delete_file(File("new_dir",'d'));
 
+	// Root path
+	Current_dir d7 = d5.cd("/");
+
 	std::cout << "init Current_dir with test_dir" << std::endl;
 	immer::for_each(d.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
 	std::cout  << std::endl;
@@ -50,6 +53,9 @@ int main()
 
 	std::cout << "delete new_dir" << std::endl;
 	immer::for_each(d6.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
+
+	std::cout << "delete new_dir" << std::endl;
+	immer::for_each(d7.ls(), [](auto&& s) { std::cout << s.get_info() << std::endl; });
 
 	File_manager_tui fm(d);	
 
