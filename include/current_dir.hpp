@@ -34,6 +34,7 @@ public:
 	immer::flex_vector<File> ls() const;
 
 	Current_dir cd(const File& dir) const;
+	Current_dir cd(fs::path dir_path) const;
 
 	Current_dir rename(const File& f, const std::string& new_file_name) const &;
 	Current_dir rename(const File& f, const std::string& new_file_name) &&;

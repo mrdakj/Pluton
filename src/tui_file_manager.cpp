@@ -4,14 +4,14 @@ using namespace cppurses;
 
 
 /* Change directory slot */
-sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirname)
+sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
 {
     //sig::Slot<void()> slot{[&pb] { pb.clicked(); }};
     //slot.track(pb.destroyed);
     //return slot;
 
-    sig::Slot<void()> slot{[&fm, dirname] {
-	    fm.set_directory(fm.curdir.cd(dirname));
+    sig::Slot<void()> slot{[&fm, dirpath] {
+	    fm.set_directory(fm.curdir.cd(fs::absolute(dirpath)));
 	    // exit(EXIT_FAILURE);
     }};
 
@@ -54,13 +54,13 @@ void File_manager_tui::init(const Current_dir& curdir)
 	set_directory(curdir);
 }
 
-void File_manager_tui::set_directory(const Current_dir& curdir)
+void File_manager_tui::set_directory(const Current_dir& new_curdir)
 {
 
 	// Pokupljenja stara velicina
 	size_t old_size = flisting.size();
 
-	this->curdir = curdir;
+	this->curdir = new_curdir;
 
 	/* Postavljanje inicijalnog fajla na finfo */
 	if (curdir.dirs.size() > 0) 
@@ -71,7 +71,7 @@ void File_manager_tui::set_directory(const Current_dir& curdir)
 		file_info.set_file("Empty directory", "", "");
 
 	immer::for_each(curdir.dirs, [this](auto&& f) { 
-		flisting.add_item(f.get_name()).connect(chdir(*this, f.get_name()));
+		flisting.add_item(f.get_name()).connect(chdir(*this, this->curdir.path / f.get_name()));
 	});
 
 	immer::for_each(curdir.regular_files, [this](auto&& f) { 
@@ -84,6 +84,8 @@ void File_manager_tui::set_directory(const Current_dir& curdir)
 	       flisting.remove_item(0);	
 
 	flisting.selected_file_changed.connect(change_file(*this));	
+	flisting.esc_pressed.disconnect_all_slots();
+	flisting.esc_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
 
-	this->current_dir_path.set_text("  Dir: " + fs::absolute(curdir.get_path()).string());
+	this->current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }

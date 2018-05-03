@@ -21,7 +21,7 @@ unsigned binary_lower(const std::string& name, immer::flex_vector<File> v)
     return std::distance(v.begin(), it);
 }
 Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files)
-	: path(path), dirs(std::move(dirs)), regular_files(std::move(regular_files))
+	: path(fs::absolute(path)), dirs(std::move(dirs)), regular_files(std::move(regular_files))
 {
 	/* TODO FIX check error */
 	try  {
@@ -37,7 +37,7 @@ Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs,
 }
 
 Current_dir::Current_dir(const std::string& path)
-	: path(path)
+	: path(fs::absolute(path))
 {
 	/* TODO FIX check error */
 	try  {
@@ -77,9 +77,23 @@ immer::flex_vector<File> Current_dir::ls() const
 Current_dir Current_dir::cd(const File& dir) const
 {
 	fs::path dir_path = path / dir.get_name();
-	if (!fs::is_directory(dir_path))
+	if (!fs::is_directory(dir_path)) {
 		throw "nod a dir";
+		return *this;
+	}
 	return Current_dir(dir_path);
+}
+
+Current_dir Current_dir::cd(fs::path dir_path) const
+{
+	fs::path dpath = fs::absolute(dir_path);
+
+	if (!fs::is_directory(dpath)) {
+		throw "nod a dir";
+		return *this;
+	}
+
+	return Current_dir(dpath);
 }
 
 void Current_dir::rename_on_system(const File& f, const std::string& new_file_name) const
@@ -214,7 +228,6 @@ Current_dir Current_dir::delete_file(const File& f) &&
 
 const File Current_dir::find_by_fname(const std::string &file_name) const
 {
-
 	auto num_of_files = regular_files.size();
 	if (num_of_files > 0) {	
 		auto index = binary_search(file_name, regular_files);

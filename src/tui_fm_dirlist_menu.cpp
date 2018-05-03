@@ -135,6 +135,8 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
         this->select_up();
     } else if (key == Key::Enter) {
         this->call_current_item();
+    } else if (key == Key::Escape) {
+	esc_pressed();
     }
     return true;
 }

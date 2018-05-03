@@ -22,6 +22,7 @@ class Fm_dirlist_menu : public Vertical_layout {
     sig::Signal<void()>& add_item(Glyph_string label);
     sig::Signal<void()>& insert_item(Glyph_string label, std::size_t index);
     sig::Signal<void()> selected_file_changed;
+    sig::Signal<void()> esc_pressed;
 
     void remove_item(std::size_t index);
 
