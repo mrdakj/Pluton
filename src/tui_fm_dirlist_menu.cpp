@@ -19,14 +19,16 @@
 Fm_dirlist_menu::Fm_dirlist_menu_item::Fm_dirlist_menu_item(Push_button& ref) : button{ref} {}
 
 Fm_dirlist_menu::Fm_dirlist_menu(Glyph_string title)
-    : title_{this->make_child<Label>(std::move(title))} {
+    : title_{this->make_child<Label>(std::move(title))}
+{
     this->focus_policy = Focus_policy::Strong;
     title_.set_alignment(Alignment::Center);
     title_.brush.add_attributes(Attribute::Bold);
     space1.background_tile = L'─';
 }
 
-sig::Signal<void()>& Fm_dirlist_menu::add_item(Glyph_string label) {
+sig::Signal<void()>& Fm_dirlist_menu::add_item(Glyph_string label)
+{
     Push_button& button_ref{this->make_child<Push_button>(std::move(label))};
     button_ref.install_event_filter(this);
     items_.emplace_back(button_ref);
@@ -35,11 +37,13 @@ sig::Signal<void()>& Fm_dirlist_menu::add_item(Glyph_string label) {
     auto& signal_ref{items_.back().selected};
     button_ref.clicked.connect(
         [this, index = items_.size() - 1] { items_[index].selected(); });
-    this->update();
+
+    update();
     return signal_ref;
 }
 
-sig::Signal<void()>& Fm_dirlist_menu::insert_item(Glyph_string label, std::size_t index) {
+sig::Signal<void()>& Fm_dirlist_menu::insert_item(Glyph_string label, std::size_t index)
+{
     auto button_ptr{std::make_unique<Push_button>(std::move(label))};
     button_ptr->install_event_filter(this);
     button_ptr->height_policy.type(Size_policy::Fixed);
@@ -48,20 +52,23 @@ sig::Signal<void()>& Fm_dirlist_menu::insert_item(Glyph_string label, std::size_
     items_.insert(std::begin(items_) + index, Fm_dirlist_menu_item{new_button});
     auto& signal_ref{items_[index].selected};
     new_button.clicked.connect([this, index] { items_[index].selected(); });
-    this->update();
+
+    update();
     return signal_ref;
 }
 
-void Fm_dirlist_menu::remove_item(std::size_t index) {
+void Fm_dirlist_menu::remove_item(std::size_t index) 
+{
     if (index >= items_.size()) {
         return;
     }
-    this->remove_child(&items_[index].button.get());
+
+    remove_child(&items_[index].button.get());
     items_.erase(std::begin(items_) + index);
-	
 
-
-    this->update();
+	if (selected_index_ != 0)
+		selected_index_--;
+    update();
 }
 
 void Fm_dirlist_menu::select_up(std::size_t n) {
@@ -77,8 +84,8 @@ void Fm_dirlist_menu::select_up(std::size_t n) {
     select_item(next_index);
 }
 
-void Fm_dirlist_menu::select_down(std::size_t n) {
-
+void Fm_dirlist_menu::select_down(std::size_t n) 
+{
     std::size_t next_index;	
 
     if (items_.empty()) {
@@ -105,10 +112,11 @@ void Fm_dirlist_menu::select_item(std::size_t index) {
     }
 
     selected_file_changed();
-    this->update();
+    update();
 }
 
-std::size_t Fm_dirlist_menu::size() const {
+std::size_t Fm_dirlist_menu::size() const 
+{
     return items_.size();
 }
 
@@ -130,14 +138,16 @@ bool Fm_dirlist_menu::paint_event() {
 
 bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
     if (key == Key::Arrow_down || key == Key::j) {
-        this->select_down();
+        select_down();
     } else if (key == Key::Arrow_up || key == Key::k) {
-        this->select_up();
-    } else if (key == Key::Enter) {
-        this->call_current_item();
-    } else if (key == Key::Escape) {
-	esc_pressed();
-    }
+        select_up();
+    } else if (key == Key::Enter || key == Key::l) {
+        call_current_item();
+    } else if (key == Key::Escape || key == Key::h) {
+		esc_pressed();
+    } else if (key == Key::d) {
+		remove_item(selected_index_);
+	}
     return true;
 }
 
@@ -146,9 +156,9 @@ bool Fm_dirlist_menu::mouse_press_event(Mouse_button button,
                              Point local,
                              std::uint8_t device_id) {
     if (button == Mouse_button::ScrollUp) {
-        this->select_up();
+        select_up();
     } else if (button == Mouse_button::ScrollDown) {
-        this->select_down();
+        select_down();
     }
     return Widget::mouse_press_event(button, global, local, device_id);
 }
@@ -159,11 +169,11 @@ bool Fm_dirlist_menu::mouse_press_event_filter(Event_handler* receiver,
                                     Point local,
                                     std::uint8_t device_id) {
     if (button == Mouse_button::ScrollUp) {
-        this->select_up();
+        select_up();
         return true;
     }
     if (button == Mouse_button::ScrollDown) {
-        this->select_down();
+        select_down();
         return true;
     }
     return false;
