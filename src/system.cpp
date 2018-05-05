@@ -27,6 +27,6 @@ namespace sys {
 
 	std::uintmax_t remove_from_system(const fs::path& name)
 	{
-		return fs::remove_all(name);
+		/* return fs::remove_all(name); */
 	}
 }

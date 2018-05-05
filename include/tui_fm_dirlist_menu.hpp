@@ -17,12 +17,14 @@ using namespace cppurses;
 
 class Fm_dirlist_menu : public Vertical_layout {
    public:
+	std::size_t selected_index_{0};
     explicit Fm_dirlist_menu(Glyph_string title);
 
     sig::Signal<void()>& add_item(Glyph_string label);
     sig::Signal<void()>& insert_item(Glyph_string label, std::size_t index);
     sig::Signal<void()> selected_file_changed;
     sig::Signal<void()> esc_pressed;
+    sig::Signal<void()> d_pressed;
 
     void remove_item(std::size_t index);
 
@@ -60,7 +62,6 @@ class Fm_dirlist_menu : public Vertical_layout {
     };
 
     std::vector<Fm_dirlist_menu_item> items_;
-    std::size_t selected_index_{0};
 
 
     Label& title_;

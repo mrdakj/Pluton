@@ -20,6 +20,18 @@ sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
     return slot;
 }
 
+sig::Slot<void()> delete_file(File_manager_tui& fm)
+{
+    sig::Slot<void()> slot{[&fm] {
+	    std::string file_name = fm.flisting.get_selected_item_name();
+	    fm.set_directory(fm.curdir.delete_file(fm.curdir.find_by_fname(file_name)));
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
 sig::Slot<void()> change_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] 
@@ -47,10 +59,10 @@ void File_manager_tui::init(const Current_dir& curdir)
 	set_foreground(current_dir_path, Color::Black);
 
 	Focus::set_focus_to(&flisting);
-        enable_border(flisting);
+	enable_border(flisting);
 
 
-    	current_dir_path.brush.add_attributes(Attribute::Bold);
+	current_dir_path.brush.add_attributes(Attribute::Bold);
 	set_directory(curdir);
 }
 
@@ -59,8 +71,11 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 
 	// Pokupljenja stara velicina
 	size_t old_size = flisting.size();
+	std::size_t index = flisting.selected_index_;
+	if (index != 0)
+		index--;
 
-	this->curdir = new_curdir;
+	curdir = new_curdir;
 
 	/* Postavljanje inicijalnog fajla na finfo */
 	if (curdir.dirs.size() > 0) 
@@ -80,13 +95,19 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 
 	// TODO -> Ovako je uradjeno jer mora prvo da se 
 	// dodaju novi elementi, eleminisati nekako petlju
+	// je l moze prvo da se uklone pa onda da se dodaju?
 	for (std::size_t i = 0; i < old_size; i++)
 	       flisting.remove_item(0);	
+
 
 	flisting.select_item(0);
 	flisting.selected_file_changed.connect(change_file(*this));	
 	flisting.esc_pressed.disconnect_all_slots();
 	flisting.esc_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+
+	flisting.d_pressed.disconnect_all_slots();
+	flisting.select_item(index);
+	flisting.d_pressed.connect(delete_file(*this));
 
 	this->current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }

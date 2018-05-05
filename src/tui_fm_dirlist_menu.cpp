@@ -146,8 +146,10 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
     } else if (key == Key::Escape || key == Key::h) {
 		esc_pressed();
     } else if (key == Key::d) {
-		remove_item(selected_index_);
+		d_pressed();
+	} else if (key == Key::Space) {
 	}
+
     return true;
 }
 
