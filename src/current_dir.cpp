@@ -1,4 +1,5 @@
 #include "../include/current_dir.hpp"
+#include "../include/system.hpp"
 
 template<class ForwardIt, class T, class Compare=std::less<>>
 ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})
@@ -129,25 +130,12 @@ Current_dir Current_dir::cd(fs::path dir_path) const
 	return new_dir;
 }
 
-void Current_dir::rename_on_system(const File& f, const std::string& new_file_name) const
-{
-	try { 
-		// side effect?!
-		fs::rename(path / f.get_name(), path / new_file_name);
-	}
-	catch(const fs::filesystem_error& e) {
-		// TODO -> what to do? 
-		std::cerr << "Error while renaming the file:" << std::endl;
-		std::cerr << e.what() << std::endl;
-		exit(EXIT_FAILURE);
-	}
-}
 
 
 
 Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const &
 {
-	rename_on_system(f, new_file_name);
+	sys::rename_on_system(path / f.get_name(), path / new_file_name);
 
 	if (f.get_type() == 'd') {
 		unsigned index = binary_search(f.get_name(), dirs);
@@ -185,23 +173,17 @@ const fs::path& Current_dir::get_path() const
 }
 
 
-void Current_dir::insert_on_system(const File& f) const
-{
-	// TODO check errors and check if a file already exists
-	if (f.get_type() == 'd')
-		fs::create_directory(path / f.get_name());
-	if (f.get_type() == 'r')
-		std::ofstream(path / f.get_name());
-}
 
 Current_dir Current_dir::insert_file(File&& f) const &
 {
-	insert_on_system(f);
 	if (f.get_type() == 'd') {
 		unsigned place = binary_lower(f.get_name(), dirs);
 		if (place < dirs.size() && dirs[place].get_name() == f.get_name()) {
 			std::cerr << "dir exists" << std::endl;
 			return *this;
+		}
+		else {
+			sys::insert_dir_on_system(path / f.get_name());
 		}
 		auto new_data = dirs.insert(place, std::forward<File>(f));
 		return Current_dir(path, std::move(new_data), regular_files);
@@ -211,6 +193,9 @@ Current_dir Current_dir::insert_file(File&& f) const &
 		if (place < regular_files.size() && regular_files[place].get_name() == f.get_name()) {
 			std::cerr << "file exists" << std::endl;
 			return *this;
+		}
+		else {
+			sys::insert_rfile_on_system(path / f.get_name());
 		}
 		auto new_data = regular_files.insert(place, std::forward<File>(f));
 		return Current_dir(path, dirs, std::move(new_data));
@@ -224,14 +209,10 @@ Current_dir Current_dir::insert_file(File&& f) &&
 	return *this;
 }
 
-std::uintmax_t Current_dir::remove_from_system(const File& f) const
-{
-	return fs::remove_all(path / f.get_name());
-}
 
 Current_dir Current_dir::delete_file(const File& f) const &
 {
-	remove_from_system(f);
+	sys::remove_from_system(path / f.get_name());
 
 	if (f.get_type() == 'd') {
 		unsigned index = binary_search(f.get_name(), dirs);

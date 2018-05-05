@@ -23,9 +23,6 @@ private:
 	immer::flex_vector<File> dirs;
 	immer::flex_vector<File> regular_files;
 
-	void rename_on_system(const File& f, const std::string& new_file_name) const;
-	void insert_on_system(const File& f) const;
-	std::uintmax_t remove_from_system(const File& f) const;
 public:
 
 	Current_dir(const std::string& path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files);
