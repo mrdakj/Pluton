@@ -154,6 +154,8 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 		insert_rfile();
 	} else if (key == Key::w) {
 		insert_dir();
+	} else if (key == Key::r) {
+		rename_selected();
 	}
 
     return true;

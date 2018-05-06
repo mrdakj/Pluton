@@ -132,9 +132,19 @@ Current_dir Current_dir::cd(fs::path dir_path) const
 
 
 
+const File& Current_dir::get_by_index(unsigned i) const
+{
+	if (i < dirs.size())
+		return dirs[i];
+	
+	return regular_files[i-dirs.size()];
+}
 
 Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const &
 {
+	if (binary_search(new_file_name, dirs) < dirs.size() || binary_search(new_file_name, regular_files) < regular_files.size())
+		return *this;
+
 	sys::rename_on_system(path / f.get_name(), path / new_file_name);
 
 	if (f.get_type() == 'd') {

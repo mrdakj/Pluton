@@ -77,6 +77,21 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 
     return slot;
 }
+
+sig::Slot<void()> rename_selected(File_manager_tui& fm, const std::string& new_name)
+{
+    sig::Slot<void()> slot{[&fm, new_name] {
+		auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
+	    fm.set_directory(fm.curdir.rename(selected_file, new_name));
+		int index = fm.curdir.get_index_by_name(new_name);
+		if (index != -1)
+			fm.flisting.select_item(index);
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
  
 File_manager_tui::File_manager_tui(Current_dir& curdir) : curdir(curdir)
 {
@@ -144,6 +159,9 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 
 	flisting.insert_dir.disconnect_all_slots();
 	flisting.insert_dir.connect(insert_dir(*this, "untitled_dir"));
+
+	flisting.rename_selected.disconnect_all_slots();
+	flisting.rename_selected.connect(rename_selected(*this, "new_name"));
 
 	this->current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }
