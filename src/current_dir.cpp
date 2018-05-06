@@ -179,7 +179,8 @@ Current_dir Current_dir::insert_file(File&& f) const &
 	if (f.get_type() == 'd') {
 		unsigned place = binary_lower(f.get_name(), dirs);
 		if (place < dirs.size() && dirs[place].get_name() == f.get_name()) {
-			std::cerr << "dir exists" << std::endl;
+			// bug when using TUI and cout, cerr
+			/* std::cerr << "dir exists" << std::endl; */
 			return *this;
 		}
 		else {
@@ -191,7 +192,8 @@ Current_dir Current_dir::insert_file(File&& f) const &
 	else {
 		unsigned place = binary_lower(f.get_name(), regular_files);
 		if (place < regular_files.size() && regular_files[place].get_name() == f.get_name()) {
-			std::cerr << "file exists" << std::endl;
+			// bug when using TUI and cout, cerr
+			/* std::cerr << "file exists" << std::endl; */
 			return *this;
 		}
 		else {
@@ -245,15 +247,17 @@ const File Current_dir::find_by_fname(const std::string &file_name) const
 	auto num_of_files = regular_files.size();
 	if (num_of_files > 0) {	
 		auto index = binary_search(file_name, regular_files);
+		// FIX index can be regular_files.end() and then the next line is problem
 		if (regular_files[index].get_name() == file_name)
 			return regular_files[index];
 	}
 
 	auto num_of_dirs = dirs.size();
 	if (num_of_dirs > 0) {	
-		auto index = binary_search(file_name, regular_files);
+		auto index = binary_search(file_name, regular_files); // delete this line??
 		index = binary_search(file_name, dirs);
 
+		// FIX index can be regular_files.end() and then the next line is problem
 		if (dirs[index].get_name() == file_name)
 			return dirs[index];
 
@@ -267,4 +271,17 @@ const File Current_dir::find_by_fname(const std::string &file_name) const
 	
 	// If nothing found return empty file object
 	return File("");
+}
+
+int Current_dir::get_index_by_name(const std::string &file_name) const
+{
+	auto index = binary_search(file_name, regular_files);
+	if (index != regular_files.size())
+		return dirs.size() + index;
+
+	index = binary_search(file_name, dirs);
+	if (index != dirs.size())
+		return index;
+
+	return -1;
 }

@@ -25,6 +25,8 @@ class Fm_dirlist_menu : public Vertical_layout {
     sig::Signal<void()> selected_file_changed;
     sig::Signal<void()> esc_pressed;
     sig::Signal<void()> d_pressed;
+    sig::Signal<void()> insert_rfile;
+    sig::Signal<void()> insert_dir;
 
     void remove_item(std::size_t index);
 
@@ -33,7 +35,7 @@ class Fm_dirlist_menu : public Vertical_layout {
     void select_item(std::size_t index);
 
     std::size_t size() const;
-   Glyph_string get_selected_item_name() const;
+	Glyph_string get_selected_item_name() const;
 
    protected:
     bool paint_event() override;

@@ -38,5 +38,7 @@ public:
 	/* Sloto's related to File_manager_tui */
 	sig::Slot<void()> chdir(File_manager_tui &fm, const std::string& dirname);
 	sig::Slot<void()> change_file(File_manager_tui &fm); 
+	sig::Slot<void()> insert_rfile(File_manager_tui& fm, const std::string& name);
+	sig::Slot<void()> insert_dir(File_manager_tui& fm, const std::string& name);
 
 #endif // TUI_FILE_MANAGER

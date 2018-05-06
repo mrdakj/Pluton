@@ -122,10 +122,12 @@ std::size_t Fm_dirlist_menu::size() const
 
 
 
-Glyph_string Fm_dirlist_menu::get_selected_item_name() const {
+Glyph_string Fm_dirlist_menu::get_selected_item_name() const
+{
 	Push_button & tmpbut = items_[selected_index_].button;
 	return tmpbut.contents();
 }
+
 
 bool Fm_dirlist_menu::paint_event() {
     for (Fm_dirlist_menu_item& item : items_) {
@@ -148,6 +150,10 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
     } else if (key == Key::d) {
 		d_pressed();
 	} else if (key == Key::Space) {
+	} else if (key == Key::q) {
+		insert_rfile();
+	} else if (key == Key::w) {
+		insert_dir();
 	}
 
     return true;
