@@ -35,7 +35,13 @@ unsigned File::get_size() const
 const std::string File::get_info() const
 {
 	std::ostringstream info;
+
+	if (type != 'd' && type != 'r')
+	{
+		exit(1);
+	}
 	info << name << " " << type << " " << size;
+
 	return info.str();
 }
 

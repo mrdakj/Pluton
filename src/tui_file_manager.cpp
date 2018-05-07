@@ -23,9 +23,10 @@ sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
 sig::Slot<void()> delete_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] {
-	    std::string file_name = fm.flisting.get_selected_item_name();
-	    fm.set_directory(fm.curdir.delete_file(fm.curdir.find_by_fname(file_name)));
 		std::size_t index = fm.flisting.selected_index_;
+
+	    fm.set_directory(fm.curdir.delete_file(fm.curdir.get_by_index(index)));
+
 		if (index != 0)
 			index--;
 		fm.flisting.select_item(index);
@@ -69,8 +70,7 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] 
     {
-	    std::string file_name = fm.flisting.get_selected_item_name();
-	    fm.file_info.set_file(fm.curdir.find_by_fname(file_name));
+	    fm.file_info.set_file(fm.curdir.get_by_index(fm.flisting.selected_index_));
     }};
 
     slot.track(fm.flisting.destroyed);
@@ -116,18 +116,17 @@ void File_manager_tui::init(const Current_dir& curdir)
 
 void File_manager_tui::set_directory(const Current_dir& new_curdir)
 {
-
-	// Pokupljenja stara velicina
-	size_t old_size = flisting.size();
 	curdir = new_curdir;
 
-	/* Postavljanje inicijalnog fajla na finfo */
+	// set info
 	if (curdir.dirs.size() > 0) 
 		file_info.set_file(curdir.dirs[0]);
 	else if (curdir.regular_files.size() > 0) 
 		file_info.set_file(curdir.regular_files[0]);	
 	else 
 		file_info.set_file("Empty directory", "", "");
+
+	flisting.clear();
 
 	immer::for_each(curdir.dirs, [this](auto&& f) { 
 		flisting.add_item(f.get_name()).connect(chdir(*this, this->curdir.path / f.get_name()));
@@ -136,12 +135,6 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 	immer::for_each(curdir.regular_files, [this](auto&& f) { 
 		flisting.add_item(f.get_name());
 	});
-
-	// TODO -> Ovako je uradjeno jer mora prvo da se 
-	// dodaju novi elementi, eleminisati nekako petlju
-	// je l moze prvo da se uklone pa onda da se dodaju?
-	for (std::size_t i = 0; i < old_size; i++)
-	       flisting.remove_item(0);	
 
 
 	flisting.select_item(0);

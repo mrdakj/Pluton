@@ -13,6 +13,8 @@
 #include <cppurses/widget/widgets/blank_height.hpp>
 #include <cppurses/widget/widgets/push_button.hpp>
 
+#include "../include/current_dir.hpp"
+
 using namespace cppurses;
 
 class Fm_dirlist_menu : public Vertical_layout {
@@ -30,6 +32,7 @@ class Fm_dirlist_menu : public Vertical_layout {
     sig::Signal<void()> rename_selected;
 
     void remove_item(std::size_t index);
+	void clear();
 
     void select_up(std::size_t n = 1);
     void select_down(std::size_t n = 1);

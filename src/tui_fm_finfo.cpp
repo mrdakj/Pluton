@@ -22,10 +22,12 @@ void Fm_finfo::set_file(Glyph_string fname, Glyph_string ftype, Glyph_string fsi
 void Fm_finfo::set_file(const File& f)  
 {
 	auto str_file_type = [] (char c) -> Glyph_string {
+
 		switch (c) {
 			case 'r': return "regular file";
 			case 'd': return "directory";
-			default: return "unknown";
+			default: 
+					  return "unknown";
 		}
 	};
 
