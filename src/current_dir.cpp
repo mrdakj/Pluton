@@ -1,5 +1,5 @@
-#include "../include/current_dir.hpp"
-#include "../include/system.hpp"
+#include "current_dir.hpp"
+#include "system.hpp"
 
 template<class ForwardIt, class T, class Compare=std::less<>>
 ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})

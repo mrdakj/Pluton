@@ -1,4 +1,4 @@
-#include "../include/tui_fm_finfo.hpp"
+#include "tui_fm_finfo.hpp"
 
 Fm_finfo::Fm_finfo() {
    	this->title.set_alignment(Alignment::Center);

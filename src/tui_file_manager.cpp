@@ -1,4 +1,4 @@
-#include "../include/tui_file_manager.hpp"
+#include "tui_file_manager.hpp"
 
 using namespace cppurses;
 

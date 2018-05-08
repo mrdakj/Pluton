@@ -2,9 +2,9 @@
 #include <immer/algorithm.hpp>
 #include <algorithm>
 #include <iostream>
-#include "../include/file.hpp"
-#include "../include/current_dir.hpp"
-#include "../include/tui_file_manager.hpp"
+#include "file.hpp"
+#include "current_dir.hpp"
+#include "tui_file_manager.hpp"
 #include <cppurses/cppurses.hpp>
 
 

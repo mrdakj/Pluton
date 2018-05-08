@@ -20,8 +20,8 @@ class Current_dir {
 	friend class File_manager_tui;
 private:
 	fs::path path;
-	immer::flex_vector<File> regular_files;
 	immer::flex_vector<File> dirs;
+	immer::flex_vector<File> regular_files;
 
 public:
 

@@ -1,4 +1,4 @@
-#include "../include/file.hpp"
+#include "file.hpp"
 
 File::File(const std::string& name, char type, unsigned size)
 	: name(name), type(type), size(size) 

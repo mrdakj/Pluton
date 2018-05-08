@@ -13,7 +13,7 @@
 #include <cppurses/widget/widgets/blank_height.hpp>
 #include <cppurses/widget/widgets/push_button.hpp>
 
-#include "../include/current_dir.hpp"
+#include "current_dir.hpp"
 
 using namespace cppurses;
 

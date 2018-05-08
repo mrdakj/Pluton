@@ -1,5 +1,5 @@
-#include "../include/tui_fm_dirlist_menu.hpp"
-#include "../include/tui_fm_finfo.hpp"
+#include "tui_fm_dirlist_menu.hpp"
+#include "tui_fm_finfo.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +15,7 @@
 #include <cppurses/widget/focus_policy.hpp>
 #include <cppurses/widget/widgets/push_button.hpp>
 
-#include "../include/current_dir.hpp"
+#include "current_dir.hpp"
 
 Fm_dirlist_menu::Fm_dirlist_menu_item::Fm_dirlist_menu_item(Push_button& ref) : button{ref} {}
 
@@ -76,7 +76,7 @@ void Fm_dirlist_menu::remove_item(std::size_t index)
 
 void Fm_dirlist_menu::clear()
 {
-	for (int index = 0; index < items_.size(); index++)
+	for (unsigned index = 0; index < items_.size(); index++)
 		remove_child(&items_[index].button.get());
 	items_.clear();
 	selected_index_ = 0;
