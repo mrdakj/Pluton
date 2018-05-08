@@ -21,6 +21,7 @@ unsigned binary_lower(const std::string& name, immer::flex_vector<File> v)
 
     return std::distance(v.begin(), it);
 }
+
 Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files)
 	: path(fs::absolute(path)), dirs(std::move(dirs)), regular_files(std::move(regular_files))
 {
@@ -151,7 +152,7 @@ Current_dir Current_dir::rename(const File& f, const std::string& new_file_name)
 		unsigned index = binary_search(f.get_name(), dirs);
 		if (index < dirs.size()) {
 			auto new_data = dirs.erase(index);
-			int new_place = binary_lower(new_file_name, dirs);
+			int new_place = binary_lower(new_file_name, new_data);
 			new_data = std::move(new_data).insert(new_place, dirs[index].rename(new_file_name));
 			return Current_dir(path, std::move(new_data), regular_files);
 		}
@@ -160,7 +161,7 @@ Current_dir Current_dir::rename(const File& f, const std::string& new_file_name)
 		unsigned index = binary_search(f.get_name(), regular_files);
 		if (index < regular_files.size()) {
 			auto new_data = regular_files.erase(index);
-			int new_place = binary_lower(new_file_name, regular_files);
+			int new_place = binary_lower(new_file_name, new_data);
 			new_data = std::move(new_data).insert(new_place, regular_files[index].rename(new_file_name));
 			return Current_dir(path, dirs, std::move(new_data));
 		}

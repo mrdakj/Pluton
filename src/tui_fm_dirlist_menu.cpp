@@ -163,11 +163,11 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 		d_pressed();
 	} else if (key == Key::Space) {
 	} else if (key == Key::q) {
-		insert_rfile();
+		insert_rfile("new_file");
 	} else if (key == Key::w) {
-		insert_dir();
+		insert_dir("new_dir");
 	} else if (key == Key::r) {
-		rename_selected();
+		rename_selected("new_name");
 	}
 
     return true;

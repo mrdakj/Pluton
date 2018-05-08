@@ -37,9 +37,9 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
     return slot;
 }
 
-sig::Slot<void()> insert_rfile(File_manager_tui& fm, const std::string& name)
+sig::Slot<void(const std::string& name)> insert_rfile(File_manager_tui& fm)
 {
-    sig::Slot<void()> slot{[&fm, name] {
+    sig::Slot<void(const std::string& name)> slot{[&fm] (const std::string& name) {
 	    fm.set_directory(fm.curdir.insert_file(File(name, 'r')));
 		int index = fm.curdir.get_index_by_name(name);
 		if (index != -1)
@@ -52,9 +52,9 @@ sig::Slot<void()> insert_rfile(File_manager_tui& fm, const std::string& name)
     return slot;
 }
 
-sig::Slot<void()> insert_dir(File_manager_tui& fm, const std::string& name)
+sig::Slot<void(const std::string& name)> insert_dir(File_manager_tui& fm)
 {
-    sig::Slot<void()> slot{[&fm, name] {
+    sig::Slot<void(const std::string& name)> slot{[&fm] (const std::string& name) {
 	    fm.set_directory(fm.curdir.insert_file(File(name, 'd')));
 		int index = fm.curdir.get_index_by_name(name);
 		if (index != -1)
@@ -78,9 +78,9 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
     return slot;
 }
 
-sig::Slot<void()> rename_selected(File_manager_tui& fm, const std::string& new_name)
+sig::Slot<void(const std::string& new_name)> rename_selected(File_manager_tui& fm)
 {
-    sig::Slot<void()> slot{[&fm, new_name] {
+    sig::Slot<void(const std::string& new_name)> slot{[&fm] (const std::string& new_name) {
 		auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
 	    fm.set_directory(fm.curdir.rename(selected_file, new_name));
 		int index = fm.curdir.get_index_by_name(new_name);
@@ -148,13 +148,13 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 
 
 	flisting.insert_rfile.disconnect_all_slots();
-	flisting.insert_rfile.connect(insert_rfile(*this, "unititled"));
+	flisting.insert_rfile.connect(insert_rfile(*this));
 
 	flisting.insert_dir.disconnect_all_slots();
-	flisting.insert_dir.connect(insert_dir(*this, "untitled_dir"));
+	flisting.insert_dir.connect(insert_dir(*this));
 
 	flisting.rename_selected.disconnect_all_slots();
-	flisting.rename_selected.connect(rename_selected(*this, "new_name"));
+	flisting.rename_selected.connect(rename_selected(*this));
 
 	this->current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }

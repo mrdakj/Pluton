@@ -38,8 +38,8 @@ public:
 	/* Sloto's related to File_manager_tui */
 	sig::Slot<void()> chdir(File_manager_tui &fm, const std::string& dirname);
 	sig::Slot<void()> change_file(File_manager_tui &fm); 
-	sig::Slot<void()> insert_rfile(File_manager_tui& fm, const std::string& name);
-	sig::Slot<void()> insert_dir(File_manager_tui& fm, const std::string& name);
-	sig::Slot<void()> rename_selected(File_manager_tui& fm, const std::string& new_name);
+	sig::Slot<void(const std::string& new_name)> insert_rfile(File_manager_tui& fm);
+	sig::Slot<void(const std::string& new_name)> insert_dir(File_manager_tui& fm);
+	sig::Slot<void(const std::string& new_name)> rename_selected(File_manager_tui& fm);
 
 #endif // TUI_FILE_MANAGER
