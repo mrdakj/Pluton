@@ -27,9 +27,9 @@ class Fm_dirlist_menu : public Vertical_layout {
     sig::Signal<void()> selected_file_changed;
     sig::Signal<void()> esc_pressed;
     sig::Signal<void()> d_pressed;
-    sig::Signal<void(const std::string& new_name)> insert_rfile;
-    sig::Signal<void(const std::string& new_name)> insert_dir;
-    sig::Signal<void(const std::string& new_name)> rename_selected;
+    sig::Signal<void()> insert_rfile;
+    sig::Signal<void()> insert_dir;
+    sig::Signal<void()> rename_selected;
 
     void remove_item(std::size_t index);
 	void clear();
