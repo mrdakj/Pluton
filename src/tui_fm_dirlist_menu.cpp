@@ -142,6 +142,10 @@ Glyph_string Fm_dirlist_menu::get_selected_item_name() const
 
 
 bool Fm_dirlist_menu::paint_event() {
+
+	if (items_.empty())
+		return Vertical_layout::paint_event();
+
     for (Fm_dirlist_menu_item& item : items_) {
         item.button.get().brush.remove_attribute(Attribute::Inverse);
     }

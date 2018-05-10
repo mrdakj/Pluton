@@ -60,14 +60,27 @@ sig::Slot<void()> insert_rfile(File_manager_tui& fm)
 			fm.file_info.set_visible(true);
 
 			Focus::set_focus_to(&fm.flisting);
-			insert_widget.text_input.editing_finished.disconnect_all_slots();
+			insert_widget.editing_finished.disconnect_all_slots();
+			insert_widget.editing_canceled.disconnect_all_slots();
 			/* TODO Remove child not working */
 			//fm.vlayout_right.remove_child(&insert_widget);
 			fm.update();
 			
 		}};
 
-		insert_widget.text_input.editing_finished.connect(insert_rfile_slot);
+		sig::Slot<void()> cancel_editing_slot{[&fm, &insert_widget] () {
+			insert_widget.set_visible(false);
+			fm.file_info.set_visible(true);
+
+			Focus::set_focus_to(&fm.flisting);
+			insert_widget.editing_finished.disconnect_all_slots();
+			insert_widget.editing_canceled.disconnect_all_slots();
+			fm.update();
+		}};
+
+
+		insert_widget.editing_finished.connect(insert_rfile_slot);
+		insert_widget.editing_canceled.connect(cancel_editing_slot);
 		insert_rfile_slot.track(insert_widget.destroyed);
 
 	}};
@@ -107,9 +120,19 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 			fm.update();
 		}};
 
-		insert_widget.text_input.editing_finished.connect(insert_dir_slot);
-		insert_dir_slot.track(insert_widget.destroyed);
+		sig::Slot<void()> cancel_editing_slot{[&fm, &insert_widget] () {
+			insert_widget.set_visible(false);
+			fm.file_info.set_visible(true);
 
+			Focus::set_focus_to(&fm.flisting);
+			insert_widget.editing_finished.disconnect_all_slots();
+			insert_widget.editing_canceled.disconnect_all_slots();
+			fm.update();
+		}};
+
+		insert_widget.text_input.editing_finished.connect(insert_dir_slot);
+		insert_widget.editing_canceled.connect(cancel_editing_slot);
+		insert_dir_slot.track(insert_widget.destroyed);
 	}};
 
     slot.track(fm.destroyed);
@@ -161,7 +184,18 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 		}};
 
+		sig::Slot<void()> cancel_editing_slot{[&fm, &rename_widget] () {
+			rename_widget.set_visible(false);
+			fm.file_info.set_visible(true);
+
+			Focus::set_focus_to(&fm.flisting);
+			rename_widget.editing_finished.disconnect_all_slots();
+			rename_widget.editing_canceled.disconnect_all_slots();
+			fm.update();
+		}};
+
 		rename_widget.text_input.editing_finished.connect(rename_slot);
+		rename_widget.editing_canceled.connect(cancel_editing_slot);
 		rename_slot.track(rename_widget.destroyed);
     }};
 
