@@ -1,8 +1,35 @@
 #include "../include/tui_file_manager.hpp"
-#include "../include/tui_text_input.hpp"
+#include "../include/tui_fm_text_input.hpp"
+#include "../include/tui_fm_yes_no_menu_widget.hpp"
+
 
 using namespace cppurses;
 
+
+sig::Slot<void()> exit_slot(File_manager_tui& fm) 
+{
+    sig::Slot<void()> slot{[&fm] {
+		sig::Slot<void()> no_slot{[&fm] {
+
+			for (auto i : fm.vlayout_right.children())
+				i->set_visible(false);	
+
+			fm.file_info.set_visible(true);
+			Focus::set_focus_to(&fm.flisting);
+			//delete_widget.yes_signal.disconnect_all_slots();
+			fm.update();
+		}};
+
+		auto &delete_widget = fm.vlayout_right.make_child<Fm_yes_no_menu_widget>("Do you really want to exit program", System::quit, no_slot);
+	    	fm.file_info.set_visible(false);
+		Focus::set_focus_to(&delete_widget.options_menu);
+		fm.update();
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
 
 /* Change directory slot */
 sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
@@ -24,13 +51,45 @@ sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
 sig::Slot<void()> delete_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] {
+
+
 		std::size_t index = fm.flisting.selected_index_;
+		auto file = fm.curdir.get_by_index(index);
+		std::string file_name = file.get_name();
 
-	    fm.set_directory(fm.curdir.delete_file(fm.curdir.get_by_index(index)));
+	    	// Yes slot
+		sig::Slot<void()> yes_slot{[&fm, file, index] {
 
-		if (index != 0)
-			index--;
-		fm.flisting.select_item(index);
+			for (auto i : fm.vlayout_right.children())
+				i->set_visible(false);	
+
+		   	fm.set_directory(fm.curdir.delete_file(file));
+
+			if (index != 0)
+				fm.flisting.selected_index_--;
+
+			fm.flisting.select_item(fm.flisting.selected_index_);
+			fm.file_info.set_visible(true);
+			Focus::set_focus_to(&fm.flisting);
+			fm.update();
+		}};
+
+		// No slot
+		sig::Slot<void()> no_slot{[&fm] {
+
+			for (auto i : fm.vlayout_right.children())
+				i->set_visible(false);	
+
+			fm.file_info.set_visible(true);
+			Focus::set_focus_to(&fm.flisting);
+			//delete_widget.yes_signal.disconnect_all_slots();
+			fm.update();
+		}};
+
+		auto &delete_widget = fm.vlayout_right.make_child<Fm_yes_no_menu_widget>("Do you really want to delete " + file_name, yes_slot, no_slot);
+	    	fm.file_info.set_visible(false);
+		Focus::set_focus_to(&delete_widget.options_menu);
+		fm.update();
     }};
 
     slot.track(fm.destroyed);
@@ -251,12 +310,17 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 	flisting.select_item(0);
 	flisting.selected_file_changed.connect(change_file(*this));	
 
+	flisting.h_pressed.disconnect_all_slots();
+	flisting.h_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+
+	flisting.backspace_pressed.disconnect_all_slots();
+	flisting.backspace_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+
 	flisting.esc_pressed.disconnect_all_slots();
-	flisting.esc_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+	flisting.esc_pressed.connect(exit_slot(*this));
 
 	flisting.d_pressed.disconnect_all_slots();
 	flisting.d_pressed.connect(delete_file(*this));
-
 
 	flisting.insert_rfile.disconnect_all_slots();
 	flisting.insert_rfile.connect(insert_rfile(*this));

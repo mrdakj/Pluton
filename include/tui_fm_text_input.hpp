@@ -1,5 +1,5 @@
-#ifndef TUI_TEXT_INPUT
-#define TUI_TEXT_INPUT
+#ifndef TUI_FM_TEXT_INPUT
+#define TUI_FM_TEXT_INPUT
 
 #include <cppurses/cppurses.hpp>
 
@@ -36,5 +36,5 @@ public:
 
 };
 
-#endif // TUI_TEXT_INPUT
+#endif // TUI_FM_TEXT_INPUT
 
