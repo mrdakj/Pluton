@@ -45,3 +45,20 @@ Fm_text_input_widget::Fm_text_input_widget(const Glyph_string &title, const Glyp
 	enable_border(*this);
 }
 
+void Fm_text_input_widget::grab_focus()
+{
+	text_input.clear();
+	Focus::set_focus_to(&text_input);
+}
+
+
+void Fm_text_input_widget::change_title(const std::string& new_title)
+{
+	title.contents() = new_title;
+
+}
+
+void Fm_text_input_widget::change_info_message(const std::string& message)
+{
+	info_message.contents() = message;
+}

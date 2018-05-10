@@ -1,6 +1,7 @@
 #include "../include/tui_file_manager.hpp"
 #include "../include/tui_fm_text_input.hpp"
 #include "../include/tui_fm_yes_no_menu_widget.hpp"
+#include <unistd.h>
 
 
 using namespace cppurses;
@@ -54,21 +55,19 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
 
 
 		std::size_t index = fm.flisting.selected_index_;
+		std::size_t new_index = (index != 0) ? index-1 : index;
 		auto file = fm.curdir.get_by_index(index);
 		std::string file_name = file.get_name();
 
 	    	// Yes slot
-		sig::Slot<void()> yes_slot{[&fm, file, index] {
+		sig::Slot<void()> yes_slot{[&fm, file, new_index] {
 
 			for (auto i : fm.vlayout_right.children())
 				i->set_visible(false);	
 
 		   	fm.set_directory(fm.curdir.delete_file(file));
 
-			if (index != 0)
-				fm.flisting.selected_index_--;
-
-			fm.flisting.select_item(fm.flisting.selected_index_);
+			fm.flisting.select_item(new_index);
 			fm.file_info.set_visible(true);
 			Focus::set_focus_to(&fm.flisting);
 			fm.update();
@@ -97,55 +96,60 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
     return slot;
 }
 
+
 sig::Slot<void()> insert_rfile(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
 
-		auto &insert_widget = fm.vlayout_right.make_child<Fm_text_input_widget>("New regular file", "Type file name:");
+		fm.insert_widget.change_title("New regular file");
+		fm.insert_widget.change_info_message("Type name:");
+		fm.insert_widget.grab_focus();
 
 		fm.file_info.set_visible(false);
+		fm.insert_widget.set_visible(true);
 		fm.update();
 
 
-		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm, &insert_widget] (const std::string& text_new_name) {
+		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& text_new_name) {
 
 		    fm.set_directory(fm.curdir.insert_file(File(text_new_name, 'r')));
+
 			int index = fm.curdir.get_index_by_name(text_new_name);
 			if (index != -1)
 				fm.flisting.select_item(index);
 
 
-			insert_widget.set_visible(false);
+			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
 
 			Focus::set_focus_to(&fm.flisting);
-			insert_widget.editing_finished.disconnect_all_slots();
-			insert_widget.editing_canceled.disconnect_all_slots();
-			/* TODO Remove child not working */
-			//fm.vlayout_right.remove_child(&insert_widget);
+			fm.insert_widget.editing_finished.disconnect_all_slots();
+			fm.insert_widget.editing_canceled.disconnect_all_slots();
+
 			fm.update();
 			
 		}};
 
-		sig::Slot<void()> cancel_editing_slot{[&fm, &insert_widget] () {
-			insert_widget.set_visible(false);
+
+
+		sig::Slot<void()> cancel_editing_slot{[&fm] () {
+			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
 
 			Focus::set_focus_to(&fm.flisting);
-			insert_widget.editing_finished.disconnect_all_slots();
-			insert_widget.editing_canceled.disconnect_all_slots();
+			fm.insert_widget.editing_finished.disconnect_all_slots();
+			fm.insert_widget.editing_canceled.disconnect_all_slots();
 			fm.update();
 		}};
 
 
-		insert_widget.editing_finished.connect(insert_rfile_slot);
-		insert_widget.editing_canceled.connect(cancel_editing_slot);
-		insert_rfile_slot.track(insert_widget.destroyed);
+		fm.insert_widget.editing_finished.connect(insert_rfile_slot);
+		fm.insert_widget.editing_canceled.connect(cancel_editing_slot);
+		insert_rfile_slot.track(fm.insert_widget.destroyed);
 
 	}};
 
     slot.track(fm.destroyed);
-
 
     return slot;
 }
@@ -155,13 +159,16 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
 
-		auto &insert_widget = fm.vlayout_right.make_child<Fm_text_input_widget>("New directory", "Type directory name:");
+		fm.insert_widget.change_title("New dir");
+		fm.insert_widget.change_info_message("Type name:");
+		fm.insert_widget.grab_focus();
 
 		fm.file_info.set_visible(false);
+		fm.insert_widget.set_visible(true);
 		fm.update();
 
 
-		sig::Slot<void(const std::string&)> insert_dir_slot{[&fm, &insert_widget] (const std::string& text_new_name) {
+		sig::Slot<void(const std::string&)> insert_dir_slot{[&fm] (const std::string& text_new_name) {
 
 		    fm.set_directory(fm.curdir.insert_file(File(text_new_name, 'd')));
 			int index = fm.curdir.get_index_by_name(text_new_name);
@@ -169,29 +176,27 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 				fm.flisting.select_item(index);
 
 
-			insert_widget.set_visible(false);
+			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
 
 			Focus::set_focus_to(&fm.flisting);
-			insert_widget.text_input.editing_finished.disconnect_all_slots();
-			/* TODO Remove child not working */
-			//fm.vlayout_right.remove_child(&insert_widget);
+			fm.insert_widget.text_input.editing_finished.disconnect_all_slots();
 			fm.update();
 		}};
 
-		sig::Slot<void()> cancel_editing_slot{[&fm, &insert_widget] () {
-			insert_widget.set_visible(false);
+		sig::Slot<void()> cancel_editing_slot{[&fm] () {
+			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
 
 			Focus::set_focus_to(&fm.flisting);
-			insert_widget.editing_finished.disconnect_all_slots();
-			insert_widget.editing_canceled.disconnect_all_slots();
+			fm.insert_widget.editing_finished.disconnect_all_slots();
+			fm.insert_widget.editing_canceled.disconnect_all_slots();
 			fm.update();
 		}};
 
-		insert_widget.text_input.editing_finished.connect(insert_dir_slot);
-		insert_widget.editing_canceled.connect(cancel_editing_slot);
-		insert_dir_slot.track(insert_widget.destroyed);
+		fm.insert_widget.text_input.editing_finished.connect(insert_dir_slot);
+		fm.insert_widget.editing_canceled.connect(cancel_editing_slot);
+		insert_dir_slot.track(fm.insert_widget.destroyed);
 	}};
 
     slot.track(fm.destroyed);
@@ -219,12 +224,17 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 		auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
 		std::string file_name = selected_file.get_name();
-		auto &rename_widget = fm.vlayout_right.make_child<Fm_text_input_widget>("Rename " + file_name, "Type new name:", file_name);
+
+		fm.insert_widget.change_title("Rename file " + file_name);
+		fm.insert_widget.change_info_message("Type new name:");
+		fm.insert_widget.grab_focus();
 
 		fm.file_info.set_visible(false);
+		fm.insert_widget.set_visible(true);
 		fm.update();
 
-		sig::Slot<void(const std::string &text)> rename_slot{[selected_file, &fm, &rename_widget] (const std::string& text_new_name) {
+
+		sig::Slot<void(const std::string &text)> rename_slot{[selected_file, &fm] (const std::string& text_new_name) {
 
 			Focus::set_focus_to(&fm.flisting);
 
@@ -234,28 +244,26 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 			if (index != -1)
 				fm.flisting.select_item(index);
 			
-			rename_widget.set_visible(false);
+			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
-			rename_widget.text_input.editing_finished.disconnect_all_slots();
-			// TODO NOT WORKING -> REMOVE CHILD -> MEMORY LEAK ???
-			//fm.vlayout_right.remove_child(&rename_widget);
+			fm.insert_widget.text_input.editing_finished.disconnect_all_slots();
 			fm.update();
 
 		}};
 
-		sig::Slot<void()> cancel_editing_slot{[&fm, &rename_widget] () {
-			rename_widget.set_visible(false);
+		sig::Slot<void()> cancel_editing_slot{[&fm] () {
+			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
 
 			Focus::set_focus_to(&fm.flisting);
-			rename_widget.editing_finished.disconnect_all_slots();
-			rename_widget.editing_canceled.disconnect_all_slots();
+			fm.insert_widget.editing_finished.disconnect_all_slots();
+			fm.insert_widget.editing_canceled.disconnect_all_slots();
 			fm.update();
 		}};
 
-		rename_widget.text_input.editing_finished.connect(rename_slot);
-		rename_widget.editing_canceled.connect(cancel_editing_slot);
-		rename_slot.track(rename_widget.destroyed);
+		fm.insert_widget.text_input.editing_finished.connect(rename_slot);
+		fm.insert_widget.editing_canceled.connect(cancel_editing_slot);
+		rename_slot.track(fm.insert_widget.destroyed);
     }};
 
     slot.track(fm.destroyed);
@@ -276,6 +284,7 @@ void File_manager_tui::init(const Current_dir& curdir)
 	set_background(current_dir_path, Color::White);
 	set_foreground(current_dir_path, Color::Black);
 
+	insert_widget.set_visible(false);
 	Focus::set_focus_to(&flisting);
 	enable_border(flisting);
 
@@ -331,5 +340,5 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 	flisting.rename_selected.disconnect_all_slots();
 	flisting.rename_selected.connect(rename_selected(*this));
 
-	this->current_dir_path.set_text("  Dir: " + curdir.get_path().string());
+	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }

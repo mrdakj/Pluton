@@ -16,6 +16,7 @@ private:
 	public:
 		Text_input (const Glyph_string& initial_text="");
 		sig::Signal<void()> editing_canceled;
+
 };
 
 public:
@@ -32,6 +33,9 @@ public:
 	sig::Signal<void()> &editing_canceled;
 	Fm_text_input_widget(const Glyph_string &title, const Glyph_string &info_message, const Glyph_string &initial_text=""); 
 
+	void grab_focus(); 
+	void change_title(const std::string& new_title);
+	void change_info_message(const std::string& message);
 
 
 };
