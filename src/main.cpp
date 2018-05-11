@@ -60,6 +60,7 @@ int main()
 
 	File_manager_tui fm(d);	
 
+
 	cppurses::System sys;
 	sys.set_head(&fm);
 

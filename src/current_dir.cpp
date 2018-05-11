@@ -258,18 +258,15 @@ const File Current_dir::find_by_fname(const std::string &file_name) const
 	auto num_of_files = regular_files.size();
 	if (num_of_files > 0) {	
 		auto index = binary_search(file_name, regular_files);
-		// FIX index can be regular_files.end() and then the next line is problem
-		if (regular_files[index].get_name() == file_name)
+		if (index != regular_files.size())
 			return regular_files[index];
 	}
 
 	auto num_of_dirs = dirs.size();
 	if (num_of_dirs > 0) {	
-		auto index = binary_search(file_name, regular_files); // delete this line??
-		index = binary_search(file_name, dirs);
+		auto index = binary_search(file_name, dirs);
 
-		// FIX index can be regular_files.end() and then the next line is problem
-		if (dirs[index].get_name() == file_name)
+		if (index != dirs.size())
 			return dirs[index];
 
 		// if nothing found and num_of_dirs > 0 return first dir

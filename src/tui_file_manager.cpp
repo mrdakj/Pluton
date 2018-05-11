@@ -271,12 +271,63 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
     return slot;
 }
 
-sig::Slot<void()> exec_command(const std::string& command)
+sig::Slot<void()> exec_command(File_manager_tui& fm)
 {
-    sig::Slot<void()> slot{[command] () {
-				std::system(command.c_str());
+
+	sig::Slot<void()> slot{[&fm] () {
+
+		fm.insert_widget.change_title("run file");
+		fm.insert_widget.change_info_message("Type program:");
+		fm.insert_widget.grab_focus();
+
+		fm.file_info.set_visible(false);
+		fm.insert_widget.set_visible(true);
+		fm.update();
+
+
+		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& command) {
+
+			auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
+			std::string file_name = selected_file.get_name();
+			fs::path file_path = fm.curdir.get_path() / file_name;
+			std::stringstream ss;
+
+			/* ss << command << " " << file_path.c_str() << " 2> /dev/null&"; */
+			ss << "termite -e " << "'" << command << " " << file_path.c_str() << "'&";
+			std::system(ss.str().c_str());
+
+			fm.insert_widget.set_visible(false);
+			fm.file_info.set_visible(true);
+
+			Focus::set_focus_to(&fm.flisting);
+			fm.insert_widget.editing_finished.disconnect_all_slots();
+			fm.insert_widget.editing_canceled.disconnect_all_slots();
+
+			fm.update();
+			
+		}};
+
+
+
+		sig::Slot<void()> cancel_editing_slot{[&fm] () {
+			fm.insert_widget.set_visible(false);
+			fm.file_info.set_visible(true);
+
+			Focus::set_focus_to(&fm.flisting);
+			fm.insert_widget.editing_finished.disconnect_all_slots();
+			fm.insert_widget.editing_canceled.disconnect_all_slots();
+			fm.update();
+		}};
+
+
+		fm.insert_widget.editing_finished.connect(insert_rfile_slot);
+		fm.insert_widget.editing_canceled.connect(cancel_editing_slot);
+		insert_rfile_slot.track(fm.insert_widget.destroyed);
+
 	}};
 
+
+    slot.track(fm.destroyed);
 	return slot;
 }
  
@@ -349,10 +400,8 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 	flisting.rename_selected.disconnect_all_slots();
 	flisting.rename_selected.connect(rename_selected(*this));
 
-	/* std::stringstream ss; */
-	/* ss << "termite " << curdir.get_path() << "&"; */
-	/* flisting.run_file.connect(std::system("termite&")); */
-	flisting.run_file.connect(exec_command("termite&"));
+	flisting.run_file.disconnect_all_slots();
+	flisting.run_file.connect(exec_command(*this));
 
 	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }
