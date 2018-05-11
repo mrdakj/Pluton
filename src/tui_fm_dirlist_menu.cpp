@@ -20,6 +20,8 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 		insert_dir();
 	} else if (key == Key::r) {
 		rename_selected();
+	} else if (key == Key::e) {
+		run_file();
 	}
 
 	return	Fm_menu::key_press_event(key, symbol);

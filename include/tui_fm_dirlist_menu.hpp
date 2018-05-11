@@ -17,6 +17,7 @@ class Fm_dirlist_menu : public Fm_menu {
     sig::Signal<void()> insert_rfile;
     sig::Signal<void()> insert_dir;
     sig::Signal<void()> rename_selected;
+    sig::Signal<void()> run_file;
 
     protected:
     bool paint_event() override;

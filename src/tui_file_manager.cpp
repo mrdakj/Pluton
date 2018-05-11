@@ -270,6 +270,15 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
     return slot;
 }
+
+sig::Slot<void()> exec_command(const std::string& command)
+{
+    sig::Slot<void()> slot{[command] () {
+				std::system(command.c_str());
+	}};
+
+	return slot;
+}
  
 File_manager_tui::File_manager_tui(Current_dir& curdir) : curdir(curdir)
 {
@@ -339,6 +348,11 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 
 	flisting.rename_selected.disconnect_all_slots();
 	flisting.rename_selected.connect(rename_selected(*this));
+
+	/* std::stringstream ss; */
+	/* ss << "termite " << curdir.get_path() << "&"; */
+	/* flisting.run_file.connect(std::system("termite&")); */
+	flisting.run_file.connect(exec_command("termite&"));
 
 	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }

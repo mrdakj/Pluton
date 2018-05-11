@@ -44,5 +44,7 @@ public:
 	sig::Slot<void()> insert_rfile(File_manager_tui& fm);
 	sig::Slot<void()> insert_dir(File_manager_tui& fm);
 	sig::Slot<void()> rename_selected(File_manager_tui& fm);
+	sig::Slot<void()> exec_command(const std::string& command);
+
 
 #endif // TUI_FILE_MANAGER
