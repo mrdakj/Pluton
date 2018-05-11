@@ -22,6 +22,8 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 		rename_selected();
 	} else if (key == Key::e) {
 		run_file();
+	} else if (key == Key::t) {
+		terminal();
 	}
 
 	return	Fm_menu::key_press_event(key, symbol);

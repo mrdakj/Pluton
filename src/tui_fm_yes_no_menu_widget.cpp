@@ -12,3 +12,4 @@ Fm_yes_no_menu_widget::Fm_yes_no_menu_widget(std::string question, sig::Slot<voi
 	this->options_menu.add_item("No").connect(no_slot);
 	this->options_menu.esc_pressed.connect(no_slot);
 }
+

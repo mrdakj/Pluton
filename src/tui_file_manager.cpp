@@ -11,18 +11,19 @@ sig::Slot<void()> exit_slot(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] {
 		sig::Slot<void()> no_slot{[&fm] {
-
-			for (auto i : fm.vlayout_right.children())
-				i->set_visible(false);	
-
 			fm.file_info.set_visible(true);
 			Focus::set_focus_to(&fm.flisting);
-			//delete_widget.yes_signal.disconnect_all_slots();
+			fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("exit widget")->set_visible(false);
 			fm.update();
 		}};
 
+		Fm_yes_no_menu_widget* it = fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("exit widget");
+		if (it)
+			fm.vlayout_right.remove_child(it);
+
 		auto &delete_widget = fm.vlayout_right.make_child<Fm_yes_no_menu_widget>("Do you really want to exit program", System::quit, no_slot);
-	    	fm.file_info.set_visible(false);
+		delete_widget.set_name("exit widget");
+		fm.file_info.set_visible(false);
 		Focus::set_focus_to(&delete_widget.options_menu);
 		fm.update();
     }};
@@ -61,33 +62,48 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
 
 	    	// Yes slot
 		sig::Slot<void()> yes_slot{[&fm, file, new_index] {
-
-			for (auto i : fm.vlayout_right.children())
-				i->set_visible(false);	
+			for (auto i : fm.vlayout_right.children()) {
+				i->set_visible(false);
+			}
 
 		   	fm.set_directory(fm.curdir.delete_file(file));
 
 			fm.flisting.select_item(new_index);
 			fm.file_info.set_visible(true);
 			Focus::set_focus_to(&fm.flisting);
+			/* fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("delete widget")->set_visible(false); */
 			fm.update();
 		}};
 
 		// No slot
 		sig::Slot<void()> no_slot{[&fm] {
-
-			for (auto i : fm.vlayout_right.children())
-				i->set_visible(false);	
+			for (auto i : fm.vlayout_right.children()) {
+				i->set_visible(false);
+			}
 
 			fm.file_info.set_visible(true);
 			Focus::set_focus_to(&fm.flisting);
-			//delete_widget.yes_signal.disconnect_all_slots();
+			/* fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("delete widget")->set_visible(false); */
+
+			/* std::ofstream x("rez"); */
+			/* for (auto i : fm.vlayout_right.children()) { */
+			/* 	x << i->name() << std::endl; */
+			/* } */
+			
 			fm.update();
 		}};
 
+		fm.file_info.set_visible(false);
+
+		/* Fm_yes_no_menu_widget* it = fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("delete widget"); */
+
+		/* if (it) */
+		/* 	fm.vlayout_right.remove_child(it); */
+
 		auto &delete_widget = fm.vlayout_right.make_child<Fm_yes_no_menu_widget>("Do you really want to delete " + file_name, yes_slot, no_slot);
-	    	fm.file_info.set_visible(false);
+		/* delete_widget.set_name("delete widget"); */
 		Focus::set_focus_to(&delete_widget.options_menu);
+
 		fm.update();
     }};
 
@@ -271,6 +287,31 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
     return slot;
 }
 
+sig::Slot<void()> open_terminal(File_manager_tui& fm)
+{
+	sig::Slot<void()> slot{[&fm] () {
+
+		/* std::system(" echo $TERM | grep -o -e '[A-Za-z]\+' | head -n 1 > terminal_pluton"); */
+
+		/* auto output =std::ifstream("terminal_pluton"); */
+		/* std::string line; */
+
+
+		/* if (std::getline(output, line)) { */
+			std::stringstream ss;
+			ss << "termite" << " -d " << fm.curdir.get_path() << " 2> /dev/null&";
+
+			std::system(ss.str().c_str());
+		/* } */
+
+		/* fs::remove("terminal_pluton"); */
+	}};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
 sig::Slot<void()> exec_command(File_manager_tui& fm)
 {
 
@@ -290,11 +331,26 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 			auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
 			std::string file_name = selected_file.get_name();
 			fs::path file_path = fm.curdir.get_path() / file_name;
-			std::stringstream ss;
+			std::stringstream ss1;
 
-			/* ss << command << " " << file_path.c_str() << " 2> /dev/null&"; */
-			ss << "termite -e " << "'" << command << " " << file_path.c_str() << "'&";
-			std::system(ss.str().c_str());
+			ss1 <<"cat /usr/share/applications/"<<command<<".desktop 2> /dev/null | grep Terminal>result_pluton";
+			std::system(ss1.str().c_str());
+
+			auto output =std::ifstream("result_pluton");
+			std::string line;
+
+
+			if (std::getline(output, line)) {
+				std::stringstream ss;
+				if (line=="Terminal=true")
+					ss << "termite -e " << "'" << command << " " << file_path.c_str() << "'&";
+				else if (line=="Terminal=false")
+					ss << command << " " << file_path.c_str() << " 2> /dev/null&";
+
+				std::system(ss.str().c_str());
+			}
+
+			fs::remove("result_pluton");
 
 			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
@@ -402,6 +458,9 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 
 	flisting.run_file.disconnect_all_slots();
 	flisting.run_file.connect(exec_command(*this));
+	
+	flisting.terminal.disconnect_all_slots();
+	flisting.terminal.connect(open_terminal(*this));
 
 	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }
