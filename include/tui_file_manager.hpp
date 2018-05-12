@@ -7,6 +7,7 @@
 #include "tui_fm_finfo.hpp"
 #include "tui_fm_text_input.hpp"
 #include "tui_fm_yes_no_menu_widget.hpp"
+#include <vector>
 
 using namespace cppurses;
 
@@ -20,6 +21,8 @@ private:
 
 public:
 	Current_dir& curdir;
+	std::vector<Current_dir> dirs_history;
+	unsigned history_index;
 
 	File_manager_tui(Current_dir& curdir);
 

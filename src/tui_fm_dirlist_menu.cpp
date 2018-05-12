@@ -24,6 +24,10 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 		run_file();
 	} else if (key == Key::t) {
 		terminal();
+	} else if (key == Key::u) {
+		undo();
+	} else if (key == Key::p) {
+		redo();
 	}
 
 	return	Fm_menu::key_press_event(key, symbol);

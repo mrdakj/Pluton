@@ -19,6 +19,8 @@ class Fm_dirlist_menu : public Fm_menu {
     sig::Signal<void()> rename_selected;
     sig::Signal<void()> run_file;
     sig::Signal<void()> terminal;
+    sig::Signal<void()> undo;
+    sig::Signal<void()> redo;
 
     protected:
     bool paint_event() override;

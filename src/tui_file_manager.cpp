@@ -203,7 +203,10 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] 
     {
-	    fm.file_info.set_file(fm.curdir.get_by_index(fm.flisting.selected_index_));
+		if (fm.history_index == fm.dirs_history.size())
+			fm.file_info.set_file(fm.curdir.get_by_index(fm.flisting.selected_index_));
+		else
+			fm.file_info.set_file(fm.dirs_history[fm.history_index-1].get_by_index(fm.flisting.selected_index_));
     }};
 
     slot.track(fm.flisting.destroyed);
@@ -289,6 +292,64 @@ sig::Slot<void()> open_terminal(File_manager_tui& fm)
     return slot;
 }
 
+sig::Slot<void()> history_undo(File_manager_tui& fm)
+{
+	sig::Slot<void()> slot{[&fm] () {
+		if (fm.history_index >= 2) {
+			fm.flisting.clear();
+
+			fm.history_index--;
+
+			immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
+					fm.flisting.add_item(f.get_name());
+			});
+
+			fm.flisting.select_item(0);
+
+			fm.flisting.h_pressed.disable();
+			fm.flisting.d_pressed.disable();
+			fm.flisting.insert_rfile.disable();
+			fm.flisting.insert_dir.disable();
+			fm.flisting.rename_selected.disable();
+			fm.flisting.run_file.disable();
+			fm.flisting.terminal.disable();
+		}
+	}};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
+sig::Slot<void()> history_redo(File_manager_tui& fm)
+{
+	sig::Slot<void()> slot{[&fm] () {
+		if (fm.history_index < fm.dirs_history.size()) {
+			fm.flisting.clear();
+
+			fm.history_index++;
+
+			immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
+					fm.flisting.add_item(f.get_name());
+			});
+
+			fm.flisting.select_item(0);
+
+			fm.flisting.h_pressed.disable();
+			fm.flisting.d_pressed.disable();
+			fm.flisting.insert_rfile.disable();
+			fm.flisting.insert_dir.disable();
+			fm.flisting.rename_selected.disable();
+			fm.flisting.run_file.disable();
+			fm.flisting.terminal.disable();
+		}
+	}};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
 sig::Slot<void()> exec_command(File_manager_tui& fm)
 {
 
@@ -364,7 +425,7 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 	return slot;
 }
  
-File_manager_tui::File_manager_tui(Current_dir& curdir) : curdir(curdir)
+File_manager_tui::File_manager_tui(Current_dir& curdir) : curdir(curdir), history_index(0)
 {
 	init(curdir);
 }
@@ -390,6 +451,8 @@ void File_manager_tui::init(const Current_dir& curdir)
 void File_manager_tui::set_directory(const Current_dir& new_curdir)
 {
 	curdir = new_curdir;
+	dirs_history.push_back(curdir);
+	history_index++;
 
 	// set info
 	if (curdir.dirs.size() > 0) 
@@ -439,6 +502,12 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir)
 	
 	flisting.terminal.disconnect_all_slots();
 	flisting.terminal.connect(open_terminal(*this));
+
+	flisting.undo.disconnect_all_slots();
+	flisting.undo.connect(history_undo(*this));
+
+	flisting.redo.disconnect_all_slots();
+	flisting.redo.connect(history_redo(*this));
 
 	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }
