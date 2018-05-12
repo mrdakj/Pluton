@@ -1,8 +1,6 @@
 # TODO list:
 - srediti kod (ubaciti komentare) (zajedno)
 - screen too small (nebojsa)
-- confirmation u klasu (jelena)
-- exec (jelena)
 - popraviti metodu insert_file/insert_dir -> trenutno moze da insertuje fajl sa istim imenom kao dir iako to nije moguce na sistemu i obrnuto (jelena)
 - system pozive premestiti u TUI ocistiti currentdir (jelena)
 - obrada gresaka (zajedno)

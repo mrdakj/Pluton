@@ -5,7 +5,8 @@
 #include "current_dir.hpp"
 #include "tui_fm_dirlist_menu.hpp"
 #include "tui_fm_finfo.hpp"
-#include "../include/tui_fm_text_input.hpp"
+#include "tui_fm_text_input.hpp"
+#include "tui_fm_yes_no_menu_widget.hpp"
 
 using namespace cppurses;
 
@@ -36,6 +37,7 @@ public:
 	Fm_finfo& file_info{vlayout_right.make_child<Fm_finfo>()};
 
 	Fm_text_input_widget &insert_widget{vlayout_right.make_child<Fm_text_input_widget>("","")};
+	Fm_yes_no_menu_widget &confirmation_widget{vlayout_right.make_child<Fm_yes_no_menu_widget>()};
 };
 
 	/* Sloto's related to File_manager_tui */

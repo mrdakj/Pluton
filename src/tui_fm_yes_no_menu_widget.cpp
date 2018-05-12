@@ -8,8 +8,32 @@ Fm_yes_no_menu_widget::Fm_yes_no_menu_widget(std::string question, sig::Slot<voi
 	enable_border(*this);
 
 	this->question.set_text(question);
-	this->options_menu.add_item("Yes").connect(yes_slot);
-	this->options_menu.add_item("No").connect(no_slot);
-	this->options_menu.esc_pressed.connect(no_slot);
+	options_menu.add_item("Yes").connect(yes_slot);
+	options_menu.add_item("No").connect(no_slot);
+	options_menu.esc_pressed.connect(no_slot);
 }
 
+Fm_yes_no_menu_widget::Fm_yes_no_menu_widget()  
+{
+	enable_border(*this);
+}
+
+void Fm_yes_no_menu_widget::grab_focus()
+{
+	Focus::set_focus_to(&options_menu);
+}
+
+void Fm_yes_no_menu_widget::add_yes_no_slots(sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot)
+{
+	options_menu.remove_item(0);
+	options_menu.remove_item(0);
+	options_menu.add_item("Yes").connect(yes_slot);
+	options_menu.add_item("No").connect(no_slot);
+	options_menu.esc_pressed.connect(no_slot);
+}
+
+void Fm_yes_no_menu_widget::add_yes_no_slots(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot)
+{
+	this->question.set_text(question);
+	add_yes_no_slots(yes_slot, no_slot);
+}

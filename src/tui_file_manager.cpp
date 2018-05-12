@@ -12,19 +12,16 @@ sig::Slot<void()> exit_slot(File_manager_tui& fm)
     sig::Slot<void()> slot{[&fm] {
 		sig::Slot<void()> no_slot{[&fm] {
 			fm.file_info.set_visible(true);
+			fm.confirmation_widget.set_visible(false);
 			Focus::set_focus_to(&fm.flisting);
-			fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("exit widget")->set_visible(false);
 			fm.update();
 		}};
 
-		Fm_yes_no_menu_widget* it = fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("exit widget");
-		if (it)
-			fm.vlayout_right.remove_child(it);
+		fm.confirmation_widget.add_yes_no_slots("Do you really want to exit program", System::quit, no_slot);
+		fm.confirmation_widget.grab_focus();
 
-		auto &delete_widget = fm.vlayout_right.make_child<Fm_yes_no_menu_widget>("Do you really want to exit program", System::quit, no_slot);
-		delete_widget.set_name("exit widget");
 		fm.file_info.set_visible(false);
-		Focus::set_focus_to(&delete_widget.options_menu);
+		fm.confirmation_widget.set_visible(true);
 		fm.update();
     }};
 
@@ -62,47 +59,27 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
 
 	    	// Yes slot
 		sig::Slot<void()> yes_slot{[&fm, file, new_index] {
-			for (auto i : fm.vlayout_right.children()) {
-				i->set_visible(false);
-			}
-
 		   	fm.set_directory(fm.curdir.delete_file(file));
-
 			fm.flisting.select_item(new_index);
 			fm.file_info.set_visible(true);
+			fm.confirmation_widget.set_visible(false);
 			Focus::set_focus_to(&fm.flisting);
-			/* fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("delete widget")->set_visible(false); */
 			fm.update();
 		}};
 
 		// No slot
 		sig::Slot<void()> no_slot{[&fm] {
-			for (auto i : fm.vlayout_right.children()) {
-				i->set_visible(false);
-			}
-
 			fm.file_info.set_visible(true);
+			fm.confirmation_widget.set_visible(false);
 			Focus::set_focus_to(&fm.flisting);
-			/* fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("delete widget")->set_visible(false); */
-
-			/* std::ofstream x("rez"); */
-			/* for (auto i : fm.vlayout_right.children()) { */
-			/* 	x << i->name() << std::endl; */
-			/* } */
-			
 			fm.update();
 		}};
 
+		fm.confirmation_widget.add_yes_no_slots("Do you really want to delete " + file_name, yes_slot, no_slot);
+		fm.confirmation_widget.grab_focus();
+
 		fm.file_info.set_visible(false);
-
-		/* Fm_yes_no_menu_widget* it = fm.vlayout_right.find_child<Fm_yes_no_menu_widget>("delete widget"); */
-
-		/* if (it) */
-		/* 	fm.vlayout_right.remove_child(it); */
-
-		auto &delete_widget = fm.vlayout_right.make_child<Fm_yes_no_menu_widget>("Do you really want to delete " + file_name, yes_slot, no_slot);
-		/* delete_widget.set_name("delete widget"); */
-		Focus::set_focus_to(&delete_widget.options_menu);
+		fm.confirmation_widget.set_visible(true);
 
 		fm.update();
     }};
@@ -401,6 +378,7 @@ void File_manager_tui::init(const Current_dir& curdir)
 	set_foreground(current_dir_path, Color::Black);
 
 	insert_widget.set_visible(false);
+	confirmation_widget.set_visible(false);
 	Focus::set_focus_to(&flisting);
 	enable_border(flisting);
 
