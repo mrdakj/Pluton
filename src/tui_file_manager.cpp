@@ -292,14 +292,14 @@ sig::Slot<void()> open_terminal(File_manager_tui& fm)
 sig::Slot<void()> history_undo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
-		if (fm.history_index >= 2) {
+		if (fm.history_index >= 1) {
 				fm.flisting.clear();
 
-				fm.history_index--;
 
 				immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
 						fm.flisting.add_item(f.get_name());
 				});
+				fm.history_index--;
 
 				fm.flisting.selected_file_changed.disable();	
 				fm.flisting.h_pressed.disable();
@@ -320,12 +320,12 @@ sig::Slot<void()> history_undo(File_manager_tui& fm)
 sig::Slot<void()> history_redo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
-		if ((int)fm.history_index < (int)fm.dirs_history.size()) {
+		if ((int)fm.history_index < (int)fm.dirs_history.size()-1) {
 				fm.flisting.clear();
 
 				fm.history_index++;
 
-				immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
+				immer::for_each(fm.dirs_history[fm.history_index].ls(), [&fm](auto&& f) { 
 						fm.flisting.add_item(f.get_name());
 						});
 
