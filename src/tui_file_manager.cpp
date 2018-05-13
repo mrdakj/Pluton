@@ -203,10 +203,7 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] 
     {
-		if (fm.history_index == fm.dirs_history.size())
-			fm.file_info.set_file(fm.curdir.get_by_index(fm.flisting.selected_index_));
-		else
-			fm.file_info.set_file(fm.dirs_history[fm.history_index-1].get_by_index(fm.flisting.selected_index_));
+		fm.file_info.set_file(fm.curdir.get_by_index(fm.flisting.selected_index_));
     }};
 
     slot.track(fm.flisting.destroyed);
@@ -296,23 +293,22 @@ sig::Slot<void()> history_undo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
 		if (fm.history_index >= 2) {
-			fm.flisting.clear();
+				fm.flisting.clear();
 
-			fm.history_index--;
+				fm.history_index--;
 
-			immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
-					fm.flisting.add_item(f.get_name());
-			});
+				immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
+						fm.flisting.add_item(f.get_name());
+				});
 
-			fm.flisting.select_item(0);
-
-			fm.flisting.h_pressed.disable();
-			fm.flisting.d_pressed.disable();
-			fm.flisting.insert_rfile.disable();
-			fm.flisting.insert_dir.disable();
-			fm.flisting.rename_selected.disable();
-			fm.flisting.run_file.disable();
-			fm.flisting.terminal.disable();
+				fm.flisting.selected_file_changed.disable();	
+				fm.flisting.h_pressed.disable();
+				fm.flisting.d_pressed.disable();
+				fm.flisting.insert_rfile.disable();
+				fm.flisting.insert_dir.disable();
+				fm.flisting.rename_selected.disable();
+				fm.flisting.run_file.disable();
+				fm.flisting.terminal.disable();
 		}
 	}};
 
@@ -325,25 +321,24 @@ sig::Slot<void()> history_redo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
 		if ((int)fm.history_index < (int)fm.dirs_history.size()) {
-			/* std::ofstream fi("rez"); */
-			/* fi << fm.history_index << ", " << fm.dirs_history.size() << std::endl; */
-			fm.flisting.clear();
+				fm.flisting.clear();
 
-			fm.history_index++;
+				fm.history_index++;
 
-			immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
-					fm.flisting.add_item(f.get_name());
-			});
+				immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
+						fm.flisting.add_item(f.get_name());
+						});
 
-			fm.flisting.select_item(0);
+				fm.flisting.select_item(0);
 
-			fm.flisting.h_pressed.disable();
-			fm.flisting.d_pressed.disable();
-			fm.flisting.insert_rfile.disable();
-			fm.flisting.insert_dir.disable();
-			fm.flisting.rename_selected.disable();
-			fm.flisting.run_file.disable();
-			fm.flisting.terminal.disable();
+				fm.flisting.selected_file_changed.disable();	
+				fm.flisting.h_pressed.disable();
+				fm.flisting.d_pressed.disable();
+				fm.flisting.insert_rfile.disable();
+				fm.flisting.insert_dir.disable();
+				fm.flisting.rename_selected.disable();
+				fm.flisting.run_file.disable();
+				fm.flisting.terminal.disable();
 		}
 	}};
 
@@ -461,6 +456,14 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 
 		dirs_history.push_back(new_curdir);
 		history_index++;
+
+/* 		std::ofstream x("rez"); */
+/* 		for (auto i : dirs_history) { */
+/* 			for (auto j : i.ls()) { */
+/* 				x << j.get_name() << std::endl; */
+/* 			} */
+/* 			x << std::endl; */
+/* 		} */
 	}
 
 	curdir = new_curdir;
