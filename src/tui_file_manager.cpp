@@ -38,7 +38,7 @@ sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
     //return slot;
 
     sig::Slot<void()> slot{[&fm, dirpath] {
-	    fm.set_directory(fm.curdir.cd(fs::absolute(dirpath)));
+	    fm.set_directory(fm.curdir.cd(fs::absolute(dirpath)), false);
 	    // exit(EXIT_FAILURE);
     }};
 
@@ -59,7 +59,7 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
 
 	    	// Yes slot
 		sig::Slot<void()> yes_slot{[&fm, file, new_index] {
-		   	fm.set_directory(fm.curdir.delete_file(file));
+		   	fm.set_directory(fm.curdir.delete_file(file), true);
 			fm.flisting.select_item(new_index);
 			fm.file_info.set_visible(true);
 			fm.confirmation_widget.set_visible(false);
@@ -105,7 +105,7 @@ sig::Slot<void()> insert_rfile(File_manager_tui& fm)
 
 		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& text_new_name) {
 
-		    fm.set_directory(fm.curdir.insert_file(File(text_new_name, 'r')));
+		    fm.set_directory(fm.curdir.insert_file(File(text_new_name, 'r')), true);
 
 			int index = fm.curdir.get_index_by_name(text_new_name);
 			if (index != -1)
@@ -163,7 +163,7 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 
 		sig::Slot<void(const std::string&)> insert_dir_slot{[&fm] (const std::string& text_new_name) {
 
-		    fm.set_directory(fm.curdir.insert_file(File(text_new_name, 'd')));
+		    fm.set_directory(fm.curdir.insert_file(File(text_new_name, 'd')), true);
 			int index = fm.curdir.get_index_by_name(text_new_name);
 			if (index != -1)
 				fm.flisting.select_item(index);
@@ -234,7 +234,7 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 			Focus::set_focus_to(&fm.flisting);
 
-       		        fm.set_directory(fm.curdir.rename(selected_file, text_new_name));
+       		        fm.set_directory(fm.curdir.rename(selected_file, text_new_name), true);
 
 			int index = fm.curdir.get_index_by_name(text_new_name);
 			if (index != -1)
@@ -324,7 +324,9 @@ sig::Slot<void()> history_undo(File_manager_tui& fm)
 sig::Slot<void()> history_redo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
-		if (fm.history_index < fm.dirs_history.size()) {
+		if ((int)fm.history_index < (int)fm.dirs_history.size()) {
+			/* std::ofstream fi("rez"); */
+			/* fi << fm.history_index << ", " << fm.dirs_history.size() << std::endl; */
 			fm.flisting.clear();
 
 			fm.history_index++;
@@ -445,14 +447,23 @@ void File_manager_tui::init(const Current_dir& curdir)
 
 	
 	current_dir_path.brush.add_attributes(Attribute::Bold);
-	set_directory(curdir);
+	set_directory(curdir, false);
 }
 
-void File_manager_tui::set_directory(const Current_dir& new_curdir)
+void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 {
+
+	if (ind) {
+		if (dirs_history.empty() || dirs_history[dirs_history.size()-1].get_path() != new_curdir.get_path()) {
+			dirs_history.push_back(curdir);
+			history_index++;
+		}
+
+		dirs_history.push_back(new_curdir);
+		history_index++;
+	}
+
 	curdir = new_curdir;
-	dirs_history.push_back(curdir);
-	history_index++;
 
 	// set info
 	if (curdir.dirs.size() > 0) 
