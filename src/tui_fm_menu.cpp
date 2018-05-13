@@ -5,6 +5,7 @@ Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
 Fm_menu::Fm_menu()
 {
     this->focus_policy = Focus_policy::Strong;
+
     //title_.set_alignment(Alignment::Center);
     //title_.brush.add_attributes(Attribute::Bold);
     //space1.background_tile = L'─';
@@ -128,12 +129,37 @@ bool Fm_menu::paint_event() {
 	if (items_.empty())
 		return Vertical_layout::paint_event();
 
-    for (Fm_menu_item& item : items_) {
-        item.button.get().brush.remove_attribute(Attribute::Inverse);
-    }
+     // Ovo ispod je bilo po default-u
+    //for (Fm_menu_item& item : items_) {
+    //    item.button.get().brush.remove_attribute(Attribute::Inverse);
+    //}
+    
+
+   // Radi demonstracije, fiksno stavimo duzinu u koju staje ceo menu 
+   std::size_t v_begin = 0; 
+   std::size_t v_end = this->height() - 3;
+   
+    
+    for (std::size_t i = 0; i < items_.size(); i++) {
+        items_[i].button.get().brush.remove_attribute(Attribute::Inverse);
+	items_[i].button.get().set_visible(true);
+
+	// Ako je van vidljivog opsega nemoj da ga prikazujes
+	if (i < v_begin || i > v_end) {
+		items_[i].button.get().set_visible(false);
+	}
+
+    }	    
+
     items_[selected_index_].button.get().brush.add_attributes(
         Attribute::Inverse);
     return Vertical_layout::paint_event();
+}
+
+
+bool Fm_menu::resize_event(Area new_size, Area old_size) {
+	this->update();
+	return Vertical_layout::resize_event(new_size, old_size);
 }
 
 bool Fm_menu::key_press_event(Key key, char symbol) {

@@ -38,6 +38,7 @@ class Fm_menu : public Vertical_layout {
 
    protected:
     bool paint_event() override;
+    bool resize_event(Area new_size, Area old_size) override;
 
     bool key_press_event(Key key, char symbol) override;
 
