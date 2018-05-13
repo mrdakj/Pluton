@@ -15,13 +15,13 @@ class Fm_yes_no_menu_widget : public Vertical_layout {
 	void add_yes_no_slots(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot);
 	void grab_focus();
 
-	Label& title{this->make_child<Label>()};
-	Blank_height& title_blank{this->make_child<Blank_height>(1)};
 
+	Blank_height& blank_before_question{this->make_child<Blank_height>(1)};
 	Label& question{this->make_child<Label>()};
-	Blank_height& blank_after_question{this->make_child<Blank_height>(1)};
+	Blank_height& blank_after_question_first{this->make_child<Blank_height>(1)};
+	Blank_height& blank_after_question_second{this->make_child<Blank_height>(1)};
 
-	Fm_menu& options_menu{this->make_child<Fm_menu>("")};
+	Fm_menu& options_menu{this->make_child<Fm_menu>()};
 
 };
 

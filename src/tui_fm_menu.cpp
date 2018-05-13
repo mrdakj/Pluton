@@ -2,13 +2,12 @@
 
 Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
 
-Fm_menu::Fm_menu(Glyph_string title)
-    : title_{this->make_child<Label>(std::move(title))}
+Fm_menu::Fm_menu()
 {
     this->focus_policy = Focus_policy::Strong;
-    title_.set_alignment(Alignment::Center);
-    title_.brush.add_attributes(Attribute::Bold);
-    space1.background_tile = L'─';
+    //title_.set_alignment(Alignment::Center);
+    //title_.brush.add_attributes(Attribute::Bold);
+    //space1.background_tile = L'─';
 }
 
 

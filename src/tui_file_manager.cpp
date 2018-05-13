@@ -439,7 +439,6 @@ void File_manager_tui::init(const Current_dir& curdir)
 	confirmation_widget.set_visible(false);
 	Focus::set_focus_to(&flisting);
 	enable_border(flisting);
-
 	
 	current_dir_path.brush.add_attributes(Attribute::Bold);
 	set_directory(curdir, false);

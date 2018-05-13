@@ -1,6 +1,10 @@
 #include "../include/tui_fm_dirlist_menu.hpp"
 
-Fm_dirlist_menu::Fm_dirlist_menu(Glyph_string title) : Fm_menu(title) {};
+Fm_dirlist_menu::Fm_dirlist_menu() {
+	this->title.set_alignment(Alignment::Center);
+    	this->title.brush.add_attributes(Attribute::Bold);
+    	this->blank_after_title.background_tile = L'─';
+}
 
 bool Fm_dirlist_menu::paint_event() {
 	return Fm_menu::paint_event();

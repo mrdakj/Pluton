@@ -35,7 +35,10 @@ public:
 	Blank_height& bs_cur_dir_after{this->make_child<Blank_height>(2)};
 
 	Horizontal_layout& hlayout_dir_finfo{this->make_child<Horizontal_layout>()};
-	Fm_dirlist_menu& flisting{hlayout_dir_finfo.make_child<Fm_dirlist_menu>("Directory listing")};
+
+	Vertical_layout& vlayout_left{hlayout_dir_finfo.make_child<Vertical_layout>()};
+	Fm_dirlist_menu& flisting{vlayout_left.make_child<Fm_dirlist_menu>()};
+
 	Vertical_layout& vlayout_right{hlayout_dir_finfo.make_child<Vertical_layout>()};
 	Fm_finfo& file_info{vlayout_right.make_child<Fm_finfo>()};
 

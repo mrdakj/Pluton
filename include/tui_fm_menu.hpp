@@ -18,7 +18,7 @@ using namespace cppurses;
 class Fm_menu : public Vertical_layout {
    public:
 	std::size_t selected_index_{0};
-    Fm_menu(Glyph_string title);
+    Fm_menu();
 
     sig::Signal<void()> selected_item_changed;
 
@@ -63,10 +63,6 @@ class Fm_menu : public Vertical_layout {
     };
 
     std::vector<Fm_menu_item> items_;
-
-
-    Label& title_;
-    Blank_height& space1{this->make_child<Blank_height>(1)};
 
     void call_current_item();
 };

@@ -7,7 +7,7 @@ using namespace cppurses;
 
 class Fm_dirlist_menu : public Fm_menu {
    public:
-    Fm_dirlist_menu(Glyph_string title);
+    Fm_dirlist_menu();
 
     sig::Signal<void()>& selected_file_changed{Fm_menu::selected_item_changed};
     sig::Signal<void()>& esc_pressed{Fm_menu::esc_pressed};
@@ -21,6 +21,9 @@ class Fm_dirlist_menu : public Fm_menu {
     sig::Signal<void()> terminal;
     sig::Signal<void()> undo;
     sig::Signal<void()> redo;
+
+    Label& title{this->make_child<Label>("Directory listing")};
+    Blank_height& blank_after_title{this->make_child<Blank_height>(1)};
 
     protected:
     bool paint_event() override;
