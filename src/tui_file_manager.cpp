@@ -30,6 +30,21 @@ sig::Slot<void()> exit_slot(File_manager_tui& fm)
     return slot;
 }
 
+sig::Slot<void()> check_items(File_manager_tui& fm) 
+{
+    sig::Slot<void()> slot{[&fm] {
+		std::size_t index = fm.flisting.selected_index_;
+		if (index == fm.flisting.items_.size()-1) {
+			if (fm.set_items())
+				fm.flisting.selected_index_ = -1; //it is goint to call select_down and to increment this
+		}
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
 /* Change directory slot */
 sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
 {
@@ -54,7 +69,7 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
 
 		std::size_t index = fm.flisting.selected_index_;
 		std::size_t new_index = (index != 0) ? index-1 : index;
-		auto file = fm.curdir.get_by_index(index);
+		auto file = fm.curdir.get_by_index(fm.left_index + index);
 		std::string file_name = file.get_name();
 
 	    	// Yes slot
@@ -203,7 +218,7 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] 
     {
-		fm.file_info.set_file(fm.curdir.get_by_index(fm.flisting.selected_index_));
+		fm.file_info.set_file(fm.curdir.get_by_index(fm.left_index+fm.flisting.selected_index_));
     }};
 
     slot.track(fm.flisting.destroyed);
@@ -215,7 +230,7 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] () {
 
-		auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
+		auto selected_file = fm.curdir.get_by_index(fm.left_index+fm.flisting.selected_index_);
 		std::string file_name = selected_file.get_name();
 
 		fm.insert_widget.change_title("Rename file " + file_name);
@@ -231,7 +246,7 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 			Focus::set_focus_to(&fm.flisting);
 
-       		        fm.set_directory(fm.curdir.rename(selected_file, text_new_name), true);
+       		fm.set_directory(fm.curdir.rename(selected_file, text_new_name), true);
 
 			int index = fm.curdir.get_index_by_name(text_new_name);
 			if (index != -1)
@@ -363,7 +378,7 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 
 		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& command) {
 
-			auto selected_file = fm.curdir.get_by_index(fm.flisting.selected_index_);
+			auto selected_file = fm.curdir.get_by_index(fm.left_index+fm.flisting.selected_index_);
 			std::string file_name = selected_file.get_name();
 			fs::path file_path = fm.curdir.get_path() / file_name;
 			std::stringstream ss1;
@@ -421,8 +436,47 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
     slot.track(fm.destroyed);
 	return slot;
 }
+
+bool File_manager_tui::set_items()
+{
+	std::size_t height = 10;// FIX get height somehow from flisting
+
+	if (right_index >= curdir.dirs.size() && right_index - curdir.dirs.size() >= curdir.regular_files.size())
+		return false;
+
+	left_index = right_index;
+	right_index = left_index + height;
+
+	auto l = left_index;
+	auto r = right_index;
+
+
+	flisting.clear();
+
+	while (l < r && l < curdir.dirs.size()) {
+		const auto& f = curdir.dirs[l];
+		flisting.add_item(f.get_name()).connect(chdir(*this, this->curdir.path / f.get_name()));
+		l++;
+		right_index = l;
+		if (l - left_index == height)
+			return true;
+	}
+
+	while (l < r && l - curdir.dirs.size() < curdir.regular_files.size()) {
+		const auto& f = curdir.regular_files[l - curdir.dirs.size()];
+		flisting.add_item(f.get_name());
+		l++;
+		right_index = l;
+		if (l - left_index == height)
+			return true;
+	}
+
+	return true;
+
+}
  
-File_manager_tui::File_manager_tui(Current_dir& curdir) : curdir(curdir), history_index(0)
+File_manager_tui::File_manager_tui(Current_dir& curdir)
+	: curdir(curdir), history_index(0), left_index(0), right_index(0)
 {
 	init(curdir);
 }
@@ -446,6 +500,9 @@ void File_manager_tui::init(const Current_dir& curdir)
 
 void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 {
+	left_index = 0;
+	right_index = 0;
+	/* right_index = 10; //should be height */
 
 	if (ind) {
 		if (dirs_history.empty() || dirs_history[dirs_history.size()-1].get_path() != new_curdir.get_path()) {
@@ -455,14 +512,6 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 
 		dirs_history.push_back(new_curdir);
 		history_index++;
-
-/* 		std::ofstream x("rez"); */
-/* 		for (auto i : dirs_history) { */
-/* 			for (auto j : i.ls()) { */
-/* 				x << j.get_name() << std::endl; */
-/* 			} */
-/* 			x << std::endl; */
-/* 		} */
 	}
 
 	curdir = new_curdir;
@@ -475,15 +524,7 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 	else 
 		file_info.set_file("Empty directory", "", "");
 
-	flisting.clear();
-
-	immer::for_each(curdir.dirs, [this](auto&& f) { 
-		flisting.add_item(f.get_name()).connect(chdir(*this, this->curdir.path / f.get_name()));
-	});
-
-	immer::for_each(curdir.regular_files, [this](auto&& f) { 
-		flisting.add_item(f.get_name());
-	});
+	set_items();
 
 
 	flisting.select_item(0);
@@ -522,5 +563,9 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 	flisting.redo.disconnect_all_slots();
 	flisting.redo.connect(history_redo(*this));
 
+	flisting.check_items.disconnect_all_slots();
+	flisting.check_items.connect(check_items(*this));
+
 	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }
+

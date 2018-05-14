@@ -2,6 +2,7 @@
 #define TUI_FM_DIRLIST_MENU
 
 #include "tui_fm_menu.hpp"
+#include "current_dir.hpp"
 
 using namespace cppurses;
 
@@ -21,6 +22,7 @@ class Fm_dirlist_menu : public Fm_menu {
     sig::Signal<void()> terminal;
     sig::Signal<void()> undo;
     sig::Signal<void()> redo;
+    sig::Signal<void()> check_items;
 
     Label& title{this->make_child<Label>("Directory listing")};
     Blank_height& blank_after_title{this->make_child<Blank_height>(1)};

@@ -1,6 +1,7 @@
 #include "../include/tui_fm_dirlist_menu.hpp"
 
-Fm_dirlist_menu::Fm_dirlist_menu() {
+Fm_dirlist_menu::Fm_dirlist_menu()
+{
 	this->title.set_alignment(Alignment::Center);
     	this->title.brush.add_attributes(Attribute::Bold);
     	this->blank_after_title.background_tile = L'─';
@@ -32,6 +33,8 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 		undo();
 	} else if (key == Key::p) {
 		redo();
+	} else if (key == Key::j) {
+		check_items();
 	}
 
 	return	Fm_menu::key_press_event(key, symbol);

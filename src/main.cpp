@@ -11,6 +11,7 @@
 int main()
 {
 	// test_dir is dir for testing
+	/* Current_dir d("/home/jelena/GitHub"); */
 	Current_dir d("test_dir");
 
 	/* // test_dir/test_subdir -> test_dir/renamed_test_subdir */

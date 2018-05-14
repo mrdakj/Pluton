@@ -23,10 +23,13 @@ public:
 	Current_dir& curdir;
 	std::vector<Current_dir> dirs_history;
 	unsigned history_index;
+	std::size_t left_index;
+	std::size_t right_index;
 
 	File_manager_tui(Current_dir& curdir);
 
 	void set_directory(const Current_dir& curdir, bool ind);
+	bool set_items();
 
 	Titlebar& titlebar{this->make_child<Titlebar>("  P  L  U  T  O  N      F  M")};
 
@@ -44,6 +47,7 @@ public:
 
 	Fm_text_input_widget &insert_widget{vlayout_right.make_child<Fm_text_input_widget>("","")};
 	Fm_yes_no_menu_widget &confirmation_widget{vlayout_right.make_child<Fm_yes_no_menu_widget>()};
+
 };
 
 	/* Sloto's related to File_manager_tui */

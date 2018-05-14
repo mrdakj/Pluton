@@ -12,13 +12,15 @@
 #include <cppurses/widget/layouts/vertical_layout.hpp>
 #include <cppurses/widget/widgets/blank_height.hpp>
 #include <cppurses/widget/widgets/push_button.hpp>
+#include "current_dir.hpp"
 
 using namespace cppurses;
 
 class Fm_menu : public Vertical_layout {
    public:
+	
 	std::size_t selected_index_{0};
-    Fm_menu();
+	Fm_menu();
 
     sig::Signal<void()> selected_item_changed;
 
@@ -63,6 +65,7 @@ class Fm_menu : public Vertical_layout {
         sig::Signal<void()> selected;
     };
 
+   public:
     std::vector<Fm_menu_item> items_;
 
     void call_current_item();

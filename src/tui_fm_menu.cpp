@@ -1,4 +1,5 @@
 #include "../include/tui_fm_menu.hpp"
+#include <fstream>
 
 Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
 
@@ -10,6 +11,7 @@ Fm_menu::Fm_menu()
     //title_.brush.add_attributes(Attribute::Bold);
     //space1.background_tile = L'─';
 }
+
 
 
 sig::Signal<void()>& Fm_menu::add_item(Glyph_string label)
@@ -79,8 +81,16 @@ void Fm_menu::select_up(std::size_t n) {
     select_item(next_index);
 }
 
+
 void Fm_menu::select_down(std::size_t n) 
 {
+	/* clear(); */
+	/* add_item("radi"); */
+	/* add_item("jee"); */
+	
+	/* std::ofstream x("rez"); */
+	/* x<< left_index << std::endl << right_index << std::endl; */
+
     std::size_t next_index;	
 
     if (items_.empty()) {
@@ -88,7 +98,11 @@ void Fm_menu::select_down(std::size_t n)
     }
     std::size_t new_index{selected_index_ + n};
     if (new_index >= items_.size()) {
-        next_index = items_.size() - 1;
+		/* bool updated = check_curdir(left_index, right_index); */
+		/* if (updated) */
+		/* 	next_index = 0; */
+		/* else */
+			next_index = items_.size() - 1;
     } else {
         next_index = new_index;
     }
@@ -130,29 +144,29 @@ bool Fm_menu::paint_event() {
 		return Vertical_layout::paint_event();
 
      // Ovo ispod je bilo po default-u
-    //for (Fm_menu_item& item : items_) {
-    //    item.button.get().brush.remove_attribute(Attribute::Inverse);
-    //}
+    for (Fm_menu_item& item : items_) {
+        item.button.get().brush.remove_attribute(Attribute::Inverse);
+    }
     
 
    // Radi demonstracije, fiksno stavimo duzinu u koju staje ceo menu 
-   std::size_t v_begin = 0; 
-   std::size_t v_end = this->height() - 3;
+   /* std::size_t v_begin = 0; */ 
+   /* std::size_t v_end = this->height() - 3; */
    
-    
-    for (std::size_t i = 0; i < items_.size(); i++) {
-        items_[i].button.get().brush.remove_attribute(Attribute::Inverse);
-	items_[i].button.get().set_visible(true);
+    /* for (std::size_t i = 0; i < items_.size(); i++) { */
+		/* items_[i].button.get().brush.remove_attribute(Attribute::Inverse); */
+		/* items_[i].button.get().set_visible(true); */
+		
 
-	// Ako je van vidljivog opsega nemoj da ga prikazujes
-	if (i < v_begin || i > v_end) {
-		items_[i].button.get().set_visible(false);
-	}
+		// Ako je van vidljivog opsega nemoj da ga prikazujes
+		/* if (i < v_begin || i > v_end) { */
+		/* 	items_[i].button.get().set_visible(false); */
+		/* 	/1* remove_child(&items_[i].button.get()); *1/ */
+		/* } */
 
-    }	    
+    /* } */	    
 
-    items_[selected_index_].button.get().brush.add_attributes(
-        Attribute::Inverse);
+    items_[selected_index_].button.get().brush.add_attributes(Attribute::Inverse);
     return Vertical_layout::paint_event();
 }
 
@@ -161,6 +175,7 @@ bool Fm_menu::resize_event(Area new_size, Area old_size) {
 	this->update();
 	return Vertical_layout::resize_event(new_size, old_size);
 }
+
 
 bool Fm_menu::key_press_event(Key key, char symbol) {
     if (key == Key::Arrow_down || key == Key::j) {
@@ -225,13 +240,17 @@ sig::Slot<void()> select_up(Fm_menu& m, std::size_t n) {
 }
 
 sig::Slot<void(std::size_t)> select_down(Fm_menu& m) {
-    sig::Slot<void(std::size_t)> slot{[&m](auto n) { m.select_down(n); }};
+    sig::Slot<void(std::size_t)> slot{[&m](auto n) {
+
+		m.select_down(n);
+	}};
     slot.track(m.destroyed);
     return slot;
 }
 
 sig::Slot<void()> select_down(Fm_menu& m, std::size_t n) {
-    sig::Slot<void()> slot{[&m, n] { m.select_down(n); }};
+    sig::Slot<void()> slot{[&m, n] {
+		m.select_down(n); }};
     slot.track(m.destroyed);
     return slot;
 }
