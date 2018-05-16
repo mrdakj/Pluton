@@ -294,12 +294,7 @@ sig::Slot<void()> history_undo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
 		if (fm.history_index >= 1) {
-				fm.flisting.clear();
-
-
-				immer::for_each(fm.dirs_history[fm.history_index-1].ls(), [&fm](auto&& f) { 
-						fm.flisting.add_item(f.get_name());
-				});
+				fm.set_directory(fm.dirs_history[fm.history_index-1], false);
 				fm.history_index--;
 
 				fm.flisting.selected_file_changed.disable();	
@@ -322,15 +317,9 @@ sig::Slot<void()> history_redo(File_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] () {
 		if ((int)fm.history_index < (int)fm.dirs_history.size()-1) {
-				fm.flisting.clear();
 
 				fm.history_index++;
-
-				immer::for_each(fm.dirs_history[fm.history_index].ls(), [&fm](auto&& f) { 
-						fm.flisting.add_item(f.get_name());
-						});
-
-				fm.flisting.select_item(0);
+				fm.set_directory(fm.dirs_history[fm.history_index], false);
 
 				fm.flisting.selected_file_changed.disable();	
 				fm.flisting.h_pressed.disable();
@@ -487,11 +476,19 @@ sig::Slot<void()> back_items(File_manager_tui &fm)
     return slot;
 }
 
+static std::size_t old_height = 0;
+static std::size_t old_width = 0;
+
 sig::Slot<void(std::size_t, std::size_t)> reload_items(File_manager_tui &fm)
 {
     sig::Slot<void(std::size_t, std::size_t)> slot{[&fm] (std::size_t width, std::size_t height) {
-		    fm.set_items();
+		if (height != 0 && width != 0 && (width != old_width || height != old_height))
+			fm.set_items();
+
+		old_height = height;
+		old_width = width;
     }};
+
 
     slot.track(fm.destroyed);
 
@@ -524,8 +521,7 @@ void File_manager_tui::init(const Current_dir& curdir)
 
 void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 {
-	left_index = 0;
-	/* right_index = 10; //should be height */
+	/* left_index = 0; */
 
 	if (ind) {
 		if (dirs_history.empty() || dirs_history[dirs_history.size()-1].get_path() != new_curdir.get_path()) {
