@@ -48,6 +48,10 @@ public:
 	const File find_by_fname(const std::string &file_name) const;
 	const File& get_by_index(unsigned i) const;
 	int get_index_by_name(const std::string &file_name) const;
+
+	std::size_t get_num_of_regular_files();
+	std::size_t get_num_of_dirs();
+	std::size_t get_num_of_files();
 };
 
 #endif /* CURRENT_DIR_HPP */

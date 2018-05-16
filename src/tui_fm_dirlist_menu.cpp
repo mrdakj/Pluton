@@ -34,7 +34,12 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 	} else if (key == Key::p) {
 		redo();
 	} else if (key == Key::j) {
-		check_items();
+		if (selected_index_ >= items_.size()-1)
+			items_end_boundary();
+
+	} else if (key == Key::k) {
+		if (selected_index_ <= 0)
+			items_begin_boundary();
 	}
 
 	return	Fm_menu::key_press_event(key, symbol);

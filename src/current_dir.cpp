@@ -293,3 +293,19 @@ int Current_dir::get_index_by_name(const std::string &file_name) const
 
 	return -1;
 }
+
+std::size_t Current_dir::get_num_of_regular_files()
+{
+	return regular_files.size();
+}
+
+std::size_t Current_dir::get_num_of_dirs() 
+{
+	return dirs.size();
+
+}
+
+std::size_t Current_dir::get_num_of_files() 
+{
+	return regular_files.size() + dirs.size();
+}

@@ -12,6 +12,17 @@ Fm_menu::Fm_menu()
     //space1.background_tile = L'─';
 }
 
+void Fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>> > &items) 
+{
+	clear();
+	for_each(items.cbegin(), items.cend(), [this](auto item) {
+			auto & sig = this->add_item(std::get<0>(item));
+
+			auto& opt_slot = std::get<1>(item);
+			if (opt_slot != opt::none)
+				sig.connect(opt_slot.value());
+	});
+}
 
 
 sig::Signal<void()>& Fm_menu::add_item(Glyph_string label)

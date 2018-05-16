@@ -30,20 +30,6 @@ sig::Slot<void()> exit_slot(File_manager_tui& fm)
     return slot;
 }
 
-sig::Slot<void()> check_items(File_manager_tui& fm) 
-{
-    sig::Slot<void()> slot{[&fm] {
-		std::size_t index = fm.flisting.selected_index_;
-		if (index == fm.flisting.items_.size()-1) {
-			if (fm.set_items())
-				fm.flisting.selected_index_ = -1; //it is goint to call select_down and to increment this
-		}
-    }};
-
-    slot.track(fm.destroyed);
-
-    return slot;
-}
 
 /* Change directory slot */
 sig::Slot<void()> chdir(File_manager_tui& fm, const std::string& dirpath)
@@ -437,46 +423,76 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 	return slot;
 }
 
-bool File_manager_tui::set_items()
+void File_manager_tui::set_items()
 {
-	std::size_t height = 10;// FIX get height somehow from flisting
+	auto height = flisting.height() - 2;
 
-	if (right_index >= curdir.dirs.size() && right_index - curdir.dirs.size() >= curdir.regular_files.size())
-		return false;
+	auto num_of_files = curdir.get_num_of_files();
 
-	left_index = right_index;
-	right_index = left_index + height;
+	if (left_index > num_of_files)
+		left_index = num_of_files > height ? num_of_files - height : 0; 
 
 	auto l = left_index;
-	auto r = right_index;
+	auto r = std::min(left_index + height, num_of_files);
 
 
-	flisting.clear();
-
-	while (l < r && l < curdir.dirs.size()) {
-		const auto& f = curdir.dirs[l];
-		flisting.add_item(f.get_name()).connect(chdir(*this, this->curdir.path / f.get_name()));
-		l++;
-		right_index = l;
-		if (l - left_index == height)
-			return true;
+    	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > menu_items;
+	for (std::size_t i = 0; i < (r - l); i++) {
+		File f = curdir.get_by_index(l + i);
+		if (f.get_type() == 'd') {
+			menu_items.emplace_back(std::make_tuple(f.get_name(), chdir(*this, this->curdir.path / f.get_name())));
+		} else {
+			menu_items.emplace_back(std::make_tuple(f.get_name(), opt::none));
+		}
 	}
 
-	while (l < r && l - curdir.dirs.size() < curdir.regular_files.size()) {
-		const auto& f = curdir.regular_files[l - curdir.dirs.size()];
-		flisting.add_item(f.get_name());
-		l++;
-		right_index = l;
-		if (l - left_index == height)
-			return true;
-	}
-
-	return true;
-
+	this->flisting.set_items(menu_items);
 }
+
+sig::Slot<void()> next_items(File_manager_tui &fm)
+{
+    sig::Slot<void()> slot{[&fm] {
+	    if (fm.left_index + fm.flisting.items_.size() < fm.curdir.get_num_of_files()) {
+		    fm.left_index += fm.flisting.items_.size(); 
+		    fm.set_items();
+		    fm.flisting.selected_index_ = -1;
+	    }
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
+sig::Slot<void()> back_items(File_manager_tui &fm)
+{
+    sig::Slot<void()> slot{[&fm] {
+	    if (fm.left_index > 0) {
+		    fm.left_index -= fm.flisting.items_.size(); 
+		    fm.set_items();
+		    fm.flisting.selected_index_ = fm.flisting.items_.size();
+	    }
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
+sig::Slot<void(std::size_t, std::size_t)> reload_items(File_manager_tui &fm)
+{
+    sig::Slot<void(std::size_t, std::size_t)> slot{[&fm] (std::size_t width, std::size_t height) {
+		    fm.set_items();
+    }};
+
+    slot.track(fm.destroyed);
+
+    return slot;
+}
+
  
 File_manager_tui::File_manager_tui(Current_dir& curdir)
-	: curdir(curdir), history_index(0), left_index(0), right_index(0)
+	: curdir(curdir), history_index(0), left_index(0)
 {
 	init(curdir);
 }
@@ -501,7 +517,6 @@ void File_manager_tui::init(const Current_dir& curdir)
 void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 {
 	left_index = 0;
-	right_index = 0;
 	/* right_index = 10; //should be height */
 
 	if (ind) {
@@ -563,8 +578,13 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 	flisting.redo.disconnect_all_slots();
 	flisting.redo.connect(history_redo(*this));
 
-	flisting.check_items.disconnect_all_slots();
-	flisting.check_items.connect(check_items(*this));
+	flisting.items_begin_boundary.disconnect_all_slots();
+	flisting.items_begin_boundary.connect(back_items(*this));
+
+	flisting.items_end_boundary.disconnect_all_slots();
+	flisting.items_end_boundary.connect(next_items(*this));
+
+	//flisting.resized.connect(reload_items(*this));
 
 	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }

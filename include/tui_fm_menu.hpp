@@ -23,6 +23,8 @@ class Fm_menu : public Vertical_layout {
 	Fm_menu();
 
     sig::Signal<void()> selected_item_changed;
+    sig::Signal<void()> items_begin_boundary;
+    sig::Signal<void()> items_end_boundary;
 
     sig::Signal<void()>& add_item(Glyph_string label);
     sig::Signal<void()>& insert_item(Glyph_string label, std::size_t index);
@@ -67,6 +69,7 @@ class Fm_menu : public Vertical_layout {
 
    public:
     std::vector<Fm_menu_item> items_;
+    void set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > &items);
 
     void call_current_item();
 };
