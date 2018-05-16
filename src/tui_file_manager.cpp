@@ -215,6 +215,8 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 sig::Slot<void()> rename_selected(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] () {
+		if (fm.flisting.items_.empty())
+			return;
 
 		auto selected_file = fm.curdir.get_by_index(fm.left_index+fm.flisting.selected_index_);
 		std::string file_name = selected_file.get_name();
@@ -297,8 +299,7 @@ sig::Slot<void()> history_undo(File_manager_tui& fm)
 				fm.set_directory(fm.dirs_history[fm.history_index-1], false);
 				fm.history_index--;
 
-				fm.flisting.selected_file_changed.disable();	
-				fm.flisting.h_pressed.disable();
+				/* fm.flisting.h_pressed.disable(); */
 				fm.flisting.d_pressed.disable();
 				fm.flisting.insert_rfile.disable();
 				fm.flisting.insert_dir.disable();
@@ -321,8 +322,7 @@ sig::Slot<void()> history_redo(File_manager_tui& fm)
 				fm.history_index++;
 				fm.set_directory(fm.dirs_history[fm.history_index], false);
 
-				fm.flisting.selected_file_changed.disable();	
-				fm.flisting.h_pressed.disable();
+				/* fm.flisting.h_pressed.disable(); */
 				fm.flisting.d_pressed.disable();
 				fm.flisting.insert_rfile.disable();
 				fm.flisting.insert_dir.disable();
@@ -430,14 +430,11 @@ void File_manager_tui::set_items()
 	if (l == r)
 	l = r - height;
 
-	//auto f = std::ofstream("izlaz.txt");
-	//f << "Num of files: " << num_of_files << " Left index: " << l << " Right index: " << r << std::endl;
-
     	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > menu_items;
 	for (std::size_t i = l; i < r ; i++) {
 		File f = curdir.get_by_index(i);
-		if (f.get_type() == 'd') {
-			menu_items.emplace_back(std::make_tuple(f.get_name(), chdir(*this, this->curdir.path / f.get_name())));
+		if (f.get_type() == 'd' && fs::exists(this->curdir.path / f.get_name())) {
+				menu_items.emplace_back(std::make_tuple(f.get_name(), chdir(*this, this->curdir.path / f.get_name())));
 		} else {
 			menu_items.emplace_back(std::make_tuple(f.get_name(), opt::none));
 		}
@@ -549,11 +546,13 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind)
 	flisting.select_item(0);
 	flisting.selected_file_changed.connect(change_file(*this));	
 
-	flisting.h_pressed.disconnect_all_slots();
-	flisting.h_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+	if (fs::exists(curdir.get_path().parent_path())) {
+		flisting.h_pressed.disconnect_all_slots();
+		flisting.h_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
 
-	flisting.backspace_pressed.disconnect_all_slots();
-	flisting.backspace_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+		flisting.backspace_pressed.disconnect_all_slots();
+		flisting.backspace_pressed.connect(chdir(*this, fs::absolute(curdir.get_path().parent_path())));
+	}
 
 	flisting.esc_pressed.disconnect_all_slots();
 	flisting.esc_pressed.connect(exit_slot(*this));
