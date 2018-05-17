@@ -27,7 +27,7 @@ public:
 
 	File_manager_tui(Current_dir& curdir);
 
-	void set_directory(const Current_dir& curdir, bool ind);
+	void set_directory(const Current_dir& new_curdir, bool ind, int left_index);
 	void set_items();
 
 	Titlebar& titlebar{this->make_child<Titlebar>("  P  L  U  T  O  N      F  M")};
