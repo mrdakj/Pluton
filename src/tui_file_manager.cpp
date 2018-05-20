@@ -1,6 +1,7 @@
-#include "../include/tui_file_manager.hpp"
-#include "../include/tui_fm_text_input.hpp"
-#include "../include/tui_fm_yes_no_menu_widget.hpp"
+#include "tui_file_manager.hpp"
+#include "tui_fm_text_input.hpp"
+#include "tui_fm_yes_no_menu_widget.hpp"
+#include "system.hpp"
 #include <unistd.h>
 
 
@@ -253,15 +254,22 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 			Focus::set_focus_to(&fm.flisting);
 
+			try {
+				auto new_dir = fm.curdir.rename(selected_file, text_new_name);
+				sys::rename_on_system(fm.curdir.get_path() / selected_file.get_name(), fm.curdir.get_path() / text_new_name); // important to be before set_directory so one can cd into renamed dir
+				int index = new_dir.get_index_by_name(text_new_name);
+				auto height = fm.flisting.height() - 2;
 
-			auto new_dir = fm.curdir.rename(selected_file, text_new_name);
-			int index = new_dir.get_index_by_name(text_new_name);
-			auto height = fm.flisting.height() - 2;
+				fm.set_directory(new_dir, true, ((int)index/height)*height);
 
-		    fm.set_directory(new_dir, true, ((int)index/height)*height);
+				if (index != -1)
+					fm.flisting.select_item(index%height);
 
-			if (index != -1)
-				fm.flisting.select_item(index%height);
+			}
+			catch(const std::exception& e) {
+
+			}
+
 
 			
 			fm.insert_widget.set_visible(false);

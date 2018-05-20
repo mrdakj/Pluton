@@ -141,12 +141,11 @@ const File& Current_dir::get_by_index(unsigned i) const
 	return regular_files[i-dirs.size()];
 }
 
+
 Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const &
 {
 	if (binary_search(new_file_name, dirs) < dirs.size() || binary_search(new_file_name, regular_files) < regular_files.size())
-		return *this;
-
-	sys::rename_on_system(path / f.get_name(), path / new_file_name);
+		throw std::runtime_error("name exists");
 
 	if (f.get_type() == 'd') {
 		unsigned index = binary_search(f.get_name(), dirs);
@@ -194,6 +193,10 @@ Current_dir Current_dir::insert_file(File&& f) const &
 			/* std::cerr << "dir exists" << std::endl; */
 			return *this;
 		}
+		else if (binary_search(f.get_name(), regular_files) < regular_files.size()) {
+			// file with the same name
+			return *this;
+		}
 		else {
 			sys::insert_dir_on_system(path / f.get_name());
 		}
@@ -205,6 +208,10 @@ Current_dir Current_dir::insert_file(File&& f) const &
 		if (place < regular_files.size() && regular_files[place].get_name() == f.get_name()) {
 			// bug when using TUI and cout, cerr
 			/* std::cerr << "file exists" << std::endl; */
+			return *this;
+		}
+		else if (binary_search(f.get_name(), dirs) < dirs.size()) {
+			// dir with the same name
 			return *this;
 		}
 		else {
