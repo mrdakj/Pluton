@@ -100,7 +100,7 @@ void Fm_menu::select_down(std::size_t n)
 	/* add_item("jee"); */
 	
 	/* std::ofstream x("rez"); */
-	/* x<< left_index << std::endl << right_index << std::endl; */
+	/* x<< offset << std::endl << right_index << std::endl; */
 
     std::size_t next_index;	
 
@@ -109,7 +109,7 @@ void Fm_menu::select_down(std::size_t n)
     }
     std::size_t new_index{selected_index_ + n};
     if (new_index >= items_.size()) {
-		/* bool updated = check_curdir(left_index, right_index); */
+		/* bool updated = check_curdir(offset, right_index); */
 		/* if (updated) */
 		/* 	next_index = 0; */
 		/* else */

@@ -9,7 +9,7 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
 $(PROGRAM): $(OBJ_FILES)
-	$(CXX) -g -o $(PROGRAM) $(OBJ_FILES) $(LDLIBS) $(WFLAGS)
+	$(CXX)  -O3 -o $(PROGRAM) $(OBJ_FILES) $(LDLIBS) $(WFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $< $(LDLIBS) $(WFLAGS)

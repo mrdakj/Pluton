@@ -23,11 +23,11 @@ public:
 	Current_dir& curdir;
 	std::vector<Current_dir> dirs_history;
 	unsigned history_index;
-	std::size_t left_index;
+	std::size_t offset;
 
 	File_manager_tui(Current_dir& curdir);
 
-	void set_directory(const Current_dir& new_curdir, bool ind, int left_index);
+	void set_directory(const Current_dir& new_curdir, bool ind, int offset);
 	void set_items();
 
 	Titlebar& titlebar{this->make_child<Titlebar>("  P  L  U  T  O  N      F  M")};
