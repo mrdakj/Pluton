@@ -1,6 +1,9 @@
 #include "current_dir.hpp"
 #include "system.hpp"
 
+#define ERROR_PATH "error"
+#define ERROR_DIR Current_dir(ERROR_PATH)
+
 template<class ForwardIt, class T, class Compare=std::less<>>
 ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})
 {
@@ -41,6 +44,11 @@ Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs,
 Current_dir::Current_dir(const std::string& path)
 	: path(fs::absolute(path))
 {
+	if (path == ERROR_PATH) {
+		this->path = path;
+		return;
+	}
+
 	/* TODO FIX check error */
 	try  {
 		if (!fs::is_directory(path)) {
@@ -69,6 +77,11 @@ Current_dir::Current_dir(const std::string& path)
 			regular_files = std::move(regular_files).insert(index,std::move(f));
 		}
 	}
+}
+
+bool Current_dir::is_error_dir() const
+{
+	return (path == ERROR_PATH);
 }
 
 immer::flex_vector<File> Current_dir::ls() const
@@ -145,7 +158,7 @@ const File& Current_dir::get_by_index(unsigned i) const
 Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const &
 {
 	if (binary_search(new_file_name, dirs) < dirs.size() || binary_search(new_file_name, regular_files) < regular_files.size())
-		throw std::runtime_error("name exists");
+		return ERROR_DIR;
 
 	if (f.get_type() == 'd') {
 		unsigned index = binary_search(f.get_name(), dirs);

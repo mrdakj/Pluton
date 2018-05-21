@@ -13,6 +13,7 @@
 
 namespace fs = std::experimental::filesystem;
 
+
 class Current_dir {
 	// TODO -> Potrebni su dirs i regular_files
 	// fukciji koja dobavlja sadrzaj direktorijuma
@@ -42,6 +43,8 @@ public:
 
 	Current_dir delete_file(const File& f) const &;
 	Current_dir delete_file(const File& f) &&;
+
+	bool is_error_dir() const;
 
 	const fs::path& get_path() const;
 

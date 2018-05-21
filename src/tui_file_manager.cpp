@@ -254,8 +254,9 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 			Focus::set_focus_to(&fm.flisting);
 
-			try {
-				auto new_dir = fm.curdir.rename(selected_file, text_new_name);
+			auto new_dir = fm.curdir.rename(selected_file, text_new_name);
+
+			if (!new_dir.is_error_dir()) {
 				sys::rename_on_system(fm.curdir.get_path() / selected_file.get_name(), fm.curdir.get_path() / text_new_name); // important to be before set_directory so one can cd into renamed dir
 				int index = new_dir.get_index_by_name(text_new_name);
 				auto height = fm.flisting.height() - 2;
@@ -264,13 +265,10 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 				if (index != -1)
 					fm.flisting.select_item(index%height);
-
 			}
-			catch(const std::exception& e) {
-
+			else {
+				// name exists
 			}
-
-
 			
 			fm.insert_widget.set_visible(false);
 			fm.file_info.set_visible(true);
