@@ -1,6 +1,5 @@
 # TODO list:
 - srediti kod (ubaciti komentare) (zajedno)
-- system pozive premestiti u TUI ocistiti currentdir (jelena)
 - obrada gresaka (zajedno)
 - undo
 ---------------------------------------------------------------------------------------------------------------

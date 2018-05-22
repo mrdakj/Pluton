@@ -469,6 +469,10 @@ void File_manager_tui::set_items()
 	if (offset > num_of_files)
 		offset = num_of_files > height ? num_of_files - height : 0; 
 
+	if (offset < height)
+		offset = 0;
+
+
 	auto l = offset;
 	auto r = std::min(offset + height, num_of_files);
 
@@ -535,21 +539,18 @@ sig::Slot<void(std::size_t, std::size_t)> reload_items(File_manager_tui &fm)
     sig::Slot<void(std::size_t, std::size_t)> slot{[&fm] (std::size_t width, std::size_t height) {
 		if (height != 0 && width != 0 && (width != old_width || height != old_height)) {
 			auto old_selected_index = fm.flisting.selected_index_;
+			auto old_offset = fm.offset;
 			auto menu_height = fm.flisting.get_menu_height();
 
 			/* If selected_index_ is out of screen when resized,
 			 * increment offset by index, select it 
 			 * and showi menu items from that position */
-			if (menu_height < fm.flisting.selected_index_) {
-				fm.offset += fm.flisting.selected_index_;
-				fm.flisting.selected_index_ = 0;
-			}
+			if (menu_height <= fm.flisting.selected_index_)
+				fm.offset += menu_height;
 
 			fm.set_items();
 
-			/* Save old selected index on resize for example */
-			if (old_selected_index < fm.flisting.items_.size())
-				fm.flisting.selected_index_ = old_selected_index;
+			fm.flisting.selected_index_ = old_selected_index-(fm.offset-old_offset);
 				
 			// Signal selected file has changed just in case
 			fm.flisting.selected_file_changed();
