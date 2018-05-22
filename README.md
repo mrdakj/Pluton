@@ -36,7 +36,7 @@ cd in source code directory na run `make` command.
 | Esc              | Exit program                     |
 
 ### Author's:
-- Jelena Mrdak (mi1521@alas.matf.bg.ac.rs)
+- Jelena Mrdak (mi15021@alas.matf.bg.ac.rs)
 - Nebojsa Koturovic (mi15139@alas.matf.bg.ac.rs)
 
 ### TODO List
