@@ -67,11 +67,13 @@ class Fm_menu : public Vertical_layout {
         sig::Signal<void()> selected;
     };
 
+
    public:
     std::vector<Fm_menu_item> items_;
     void set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > &items);
 
     void call_current_item();
+    virtual std::size_t get_menu_height();
 };
 
 

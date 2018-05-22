@@ -7,7 +7,8 @@
 using namespace cppurses;
 
 class Fm_dirlist_menu : public Fm_menu {
-   public:
+
+    public:
     Fm_dirlist_menu();
 
     sig::Signal<void()>& selected_file_changed{Fm_menu::selected_item_changed};
@@ -26,6 +27,7 @@ class Fm_dirlist_menu : public Fm_menu {
 
     Label& title{this->make_child<Label>("Directory listing")};
     Blank_height& blank_after_title{this->make_child<Blank_height>(1)};
+    std::size_t get_menu_height() override;
 
     protected:
     bool paint_event() override;
@@ -42,6 +44,11 @@ class Fm_dirlist_menu : public Fm_menu {
                                   Point global,
                                   Point local,
                                   std::uint8_t device_id) override;
+
+    private: 
+    std::size_t height_without_menu_items{this->children().size()};
+
+
 };
 
 #endif  // TUI_FM_MENU

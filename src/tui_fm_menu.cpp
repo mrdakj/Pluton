@@ -1,4 +1,4 @@
-#include "../include/tui_fm_menu.hpp"
+#include "tui_fm_menu.hpp"
 #include <fstream>
 
 Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
@@ -235,6 +235,11 @@ void Fm_menu::call_current_item() {
     if (!items_.empty()) {
         items_[selected_index_].selected();
     }
+}
+
+
+std::size_t Fm_menu::get_menu_height(){
+	return this->height();
 }
 
 

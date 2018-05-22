@@ -1,4 +1,4 @@
-#include "../include/tui_fm_yes_no_menu_widget.hpp"
+#include "tui_fm_yes_no_menu_widget.hpp"
 
 Fm_yes_no_menu_widget::Fm_yes_no_menu_widget(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot)  
 {

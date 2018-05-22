@@ -136,7 +136,7 @@ sig::Slot<void()> insert_rfile(File_manager_tui& fm)
 				sys::insert_rfile_on_system(fm.curdir.get_path() / text_new_name);
 
 				int index = new_dir.get_index_by_name(text_new_name);
-				auto height = fm.flisting.height() - 2;
+				auto height = fm.flisting.get_menu_height();
 
 				fm.set_directory(new_dir, true, ((int)index/height)*height);
 
@@ -201,7 +201,7 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 			if (!new_dir.is_error_dir()) {
 				sys::insert_dir_on_system(fm.curdir.get_path() / text_new_name);
 				int index = new_dir.get_index_by_name(text_new_name);
-				auto height = fm.flisting.height() - 2;
+				auto height = fm.flisting.get_menu_height();
 
 				fm.set_directory(new_dir, true, ((int)index/height)*height);
 
@@ -278,7 +278,7 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 			if (!new_dir.is_error_dir()) {
 				sys::rename_on_system(fm.curdir.get_path() / selected_file.get_name(), fm.curdir.get_path() / text_new_name); // important to be before set_directory so one can cd into renamed dir
 				int index = new_dir.get_index_by_name(text_new_name);
-				auto height = fm.flisting.height() - 2;
+				auto height = fm.flisting.get_menu_height();
 
 				fm.set_directory(new_dir, true, ((int)index/height)*height);
 
@@ -463,19 +463,11 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 
 void File_manager_tui::set_items()
 {
-	// This should be more elegant
-	auto height = flisting.height() - 2;
+	auto height = flisting.get_menu_height();
 	auto num_of_files = curdir.get_num_of_files();
 
-	
 	if (offset > num_of_files)
 		offset = num_of_files > height ? num_of_files - height : 0; 
-
-	// This is needed because of infinite scrolling 
-	// through file list (items) in menu
-	// TODO Try to solve this prettier
-	if (offset < height)
-		offset = 0;
 
 	auto l = offset;
 	auto r = std::min(offset + height, num_of_files);
@@ -499,7 +491,7 @@ void File_manager_tui::set_items()
 sig::Slot<void()> next_items(File_manager_tui &fm)
 {
     sig::Slot<void()> slot{[&fm] {
-	    if (fm.offset + fm.flisting.height() - 2 < fm.curdir.get_num_of_files() && fm.flisting.selected_index_ == fm.flisting.size()-1) {
+	    if (fm.offset + fm.flisting.get_menu_height() < fm.curdir.get_num_of_files() && fm.flisting.selected_index_ == fm.flisting.size()-1) {
 		    fm.offset += fm.flisting.items_.size(); 
 		    fm.set_items();
 		    fm.flisting.selected_index_ = -1;
@@ -515,9 +507,18 @@ sig::Slot<void()> back_items(File_manager_tui &fm)
 {
     sig::Slot<void()> slot{[&fm] {
 	    if (fm.offset > 0 && fm.flisting.selected_index_ == 0) {
-		    fm.offset -= fm.flisting.height()-2; 
+		    auto height = fm.flisting.get_menu_height();
+		    auto old_offset = fm.offset;
+		    fm.offset -= std::min(height, fm.offset); 
+		    auto old_selected_index = fm.flisting.selected_index_;
 		    fm.set_items();
-		    fm.flisting.selected_index_ = fm.flisting.items_.size();
+		    fm.flisting.selected_index_ = fm.flisting.items_.size() - old_selected_index;
+
+		    /* Resolves difference when menu height is larger than number of
+		     * files in previous screen .. Instead of geting last of elements 
+		     * (at index height) we reduce it by old_offset. */
+		    if (old_offset < height)
+			    fm.flisting.selected_index_ -= height - old_offset;
 	    }
     }};
 
@@ -534,12 +535,22 @@ sig::Slot<void(std::size_t, std::size_t)> reload_items(File_manager_tui &fm)
     sig::Slot<void(std::size_t, std::size_t)> slot{[&fm] (std::size_t width, std::size_t height) {
 		if (height != 0 && width != 0 && (width != old_width || height != old_height)) {
 			auto old_selected_index = fm.flisting.selected_index_;
+			auto menu_height = fm.flisting.get_menu_height();
+
+			/* If selected_index_ is out of screen when resized,
+			 * increment offset by index, select it 
+			 * and showi menu items from that position */
+			if (menu_height < fm.flisting.selected_index_) {
+				fm.offset += fm.flisting.selected_index_;
+				fm.flisting.selected_index_ = 0;
+			}
+
 			fm.set_items();
 
 			/* Save old selected index on resize for example */
 			if (old_selected_index < fm.flisting.items_.size())
 				fm.flisting.selected_index_ = old_selected_index;
-
+				
 			// Signal selected file has changed just in case
 			fm.flisting.selected_file_changed();
 		}

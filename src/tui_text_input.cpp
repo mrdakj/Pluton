@@ -1,4 +1,4 @@
-#include "../include/tui_fm_text_input.hpp"
+#include "tui_fm_text_input.hpp"
 
 
 bool Fm_text_input_widget::Text_input::key_press_event(Key key, char symbol)

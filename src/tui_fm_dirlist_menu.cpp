@@ -1,10 +1,19 @@
-#include "../include/tui_fm_dirlist_menu.hpp"
+#include "tui_fm_dirlist_menu.hpp"
 
 Fm_dirlist_menu::Fm_dirlist_menu()
 {
 	this->title.set_alignment(Alignment::Center);
     	this->title.brush.add_attributes(Attribute::Bold);
     	this->blank_after_title.background_tile = L'─';
+
+	//std::size_t height_of_children = 0;
+	//auto children = this->children();
+	//std::for_each(children.cbegin(), children.cend(), [&height_of_children](const Widget *w) {
+	//	height_of_children += w->height();
+	//});
+	//height_without_menu_items = height_of_children;
+	//std::ofstream program_output("program_output.txt");
+	//program_output << "Height without menu items: " << height_without_menu_items << std::endl;
 }
 
 bool Fm_dirlist_menu::paint_event() {
@@ -58,4 +67,9 @@ bool Fm_dirlist_menu::mouse_press_event_filter(Event_handler* receiver,
                                     Point local,
                                     std::uint8_t device_id) {
 	return Fm_menu::mouse_press_event_filter(receiver, button, global, local, device_id);
+}
+
+std::size_t Fm_dirlist_menu::get_menu_height() 
+{
+	return this->height() - height_without_menu_items;
 }
