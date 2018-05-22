@@ -463,6 +463,7 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 
 void File_manager_tui::set_items()
 {
+	// This should be more elegant
 	auto height = flisting.height() - 2;
 	auto num_of_files = curdir.get_num_of_files();
 
@@ -470,6 +471,9 @@ void File_manager_tui::set_items()
 	if (offset > num_of_files)
 		offset = num_of_files > height ? num_of_files - height : 0; 
 
+	// This is needed because of infinite scrolling 
+	// through file list (items) in menu
+	// TODO Try to solve this prettier
 	if (offset < height)
 		offset = 0;
 
@@ -528,9 +532,17 @@ static std::size_t old_width = 0;
 sig::Slot<void(std::size_t, std::size_t)> reload_items(File_manager_tui &fm)
 {
     sig::Slot<void(std::size_t, std::size_t)> slot{[&fm] (std::size_t width, std::size_t height) {
-		if (height != 0 && width != 0 && (width != old_width || height != old_height))
+		if (height != 0 && width != 0 && (width != old_width || height != old_height)) {
+			auto old_selected_index = fm.flisting.selected_index_;
 			fm.set_items();
 
+			/* Save old selected index on resize for example */
+			if (old_selected_index < fm.flisting.items_.size())
+				fm.flisting.selected_index_ = old_selected_index;
+
+			// Signal selected file has changed just in case
+			fm.flisting.selected_file_changed();
+		}
 		old_height = height;
 		old_width = width;
     }};
