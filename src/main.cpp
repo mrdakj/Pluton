@@ -13,7 +13,6 @@ int main()
 	// test_dir is dir for testing
 	/* Current_dir d("/home/jelena/GitHub"); */
 	Current_dir d("test_dir");
-
 	/* // test_dir/test_subdir -> test_dir/renamed_test_subdir */
 	/* Current_dir d2 = d.rename(File("test_subdir", 'd'), "renamed_test_subdir"); */
 

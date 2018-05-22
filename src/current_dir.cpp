@@ -39,6 +39,7 @@ Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs,
 
 Current_dir::Current_dir(const std::string& path)
 {
+
 	if (path == ERROR_PATH || !fs::is_directory(path)) {
 		this->path = ERROR_PATH;
 		return;
@@ -49,7 +50,7 @@ Current_dir::Current_dir(const std::string& path)
 	try
 	{
 		//FIX make more functional
-		for (auto & p : fs::directory_iterator(path)) {
+		for (auto & p : fs::directory_iterator(this->path)) {
 
 			std::string file_name = p.path().filename().string();
 
@@ -58,7 +59,7 @@ Current_dir::Current_dir(const std::string& path)
 				unsigned index = binary_lower(f.get_name(), dirs);
 				dirs = std::move(dirs).insert(index,std::move(f));
 			}
-			else {
+			else if (fs::is_regular_file(p)) {
 				File f(file_name, 'r', fs::file_size(p));
 				unsigned index = binary_lower(f.get_name(), regular_files);
 				regular_files = std::move(regular_files).insert(index,std::move(f));
@@ -93,7 +94,7 @@ Current_dir Current_dir::cd(const File& dir) const
 
 Current_dir Current_dir::cd(fs::path dir_path) const
 {
-	fs::path dpath = fs::absolute(dir_path);
+	fs::path dpath =  dir_path;
 
 	if (!fs::is_directory(dpath))
 		return ERROR_DIR;
