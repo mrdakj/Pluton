@@ -4,7 +4,7 @@
 Project made for computer science class on [Faculty of Mathematics](http://www.matf.bg.ac.rs/) (University of Belgrade).
 Goal of project is to show some of the functional concepts in `c++`.
 
-[![](screenshots/1.png?raw=true)](https://github.com/mrdakj/pluton)
+[![](screenshots/1.png?raw=true)](https://github.com/mrdakj/pluton)  
 [Github link](https://github.com/mrdakj/pluton)
 
 Provided [binary](bin/pluton) run's under GNU/Linux operating system.
@@ -32,7 +32,7 @@ cd in source code directory na run `make` command.
 | w                | Create empty directory           |
 | e                | Run selected file                |
 | r                | Rename selected file             |
-| u/?              | Undo/Redo                        |
+| u/p              | Undo/Redo                        |
 | Esc              | Exit program                     |
 
 ### Author's:
@@ -40,8 +40,8 @@ cd in source code directory na run `make` command.
 - Nebojsa Koturovic (mi15139@alas.matf.bg.ac.rs)
 
 ### TODO List
-- Selecting multiple files.
-- Copying/Moving files functionality.
-- Find file's functionality.
-- Integrated shell (terminal) support.
-- Error logging on screen.
+- Copying/Moving files functionality
+- Selecting multiple files
+- File search
+- Integrated shell (terminal) support
+- Error logging on screen
