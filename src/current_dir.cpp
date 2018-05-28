@@ -25,32 +25,32 @@ unsigned binary_lower(const std::string& name, immer::flex_vector<File> v)
     return std::distance(v.begin(), it);
 }
 
-Current_dir::Current_dir(const std::string& path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files)
+Current_dir::Current_dir(const std::string& dir_path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files)
 {
-	if (path == ERROR_PATH || !fs::is_directory(path)) {
-		this->path = ERROR_PATH;
+	if (dir_path == ERROR_PATH || !fs::is_directory(dir_path)) {
+		this->dir_path = ERROR_PATH;
 		return;
 	}
 
-	this->path = fs::absolute(path); 
+	this->dir_path = fs::absolute(dir_path); 
 	this->dirs = std::move(dirs);
 	this->regular_files = std::move(regular_files);
 }
 
-Current_dir::Current_dir(const std::string& path)
+Current_dir::Current_dir(const std::string& dir_path)
 {
 
-	if (path == ERROR_PATH || !fs::is_directory(path)) {
-		this->path = ERROR_PATH;
+	if (dir_path == ERROR_PATH || !fs::is_directory(dir_path)) {
+		this->dir_path = ERROR_PATH;
 		return;
 	}
 
-	this->path = fs::absolute(path); 
+	this->dir_path = fs::absolute(dir_path); 
 
 	try
 	{
 		//FIX make more functional
-		for (auto & p : fs::directory_iterator(this->path)) {
+		for (auto & p : fs::directory_iterator(this->dir_path)) {
 
 			std::string file_name = p.path().filename().string();
 
@@ -67,44 +67,28 @@ Current_dir::Current_dir(const std::string& path)
 		}
 	}
 	catch(...) {
-		this->path = ERROR_PATH;
+		this->dir_path = ERROR_PATH;
 		return;
 	}
 }
 
 bool Current_dir::is_error_dir() const
 {
-	return (path == ERROR_PATH);
+	return (dir_path == ERROR_PATH);
 }
 
-immer::flex_vector<File> Current_dir::ls() const
-{
-	return dirs + regular_files;
-}
 
-Current_dir Current_dir::cd(const File& dir) const
+Current_dir Current_dir::cd(const fs::path& dir_path) const
 {
-	fs::path dir_path = path / dir.get_name();
-
 	if (!fs::is_directory(dir_path))
 		return ERROR_DIR;
 
 	return Current_dir(dir_path);
 }
 
-Current_dir Current_dir::cd(fs::path dir_path) const
-{
-	fs::path dpath =  dir_path;
-
-	if (!fs::is_directory(dpath))
-		return ERROR_DIR;
-
-	return Current_dir(dpath);
-}
 
 
-
-const File& Current_dir::get_by_index(unsigned i) const
+const File& Current_dir::get_file_by_index(unsigned i) const
 {
 	if (i < dirs.size())
 		return dirs[i];
@@ -112,8 +96,17 @@ const File& Current_dir::get_by_index(unsigned i) const
 	return regular_files[i-dirs.size()];
 }
 
+const File& Current_dir::get_regular_file_by_index(unsigned i) const
+{
+	return regular_files[i];
+}
 
-Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const &
+const File& Current_dir::get_dir_by_index(unsigned i) const
+{
+	return dirs[i];
+}
+
+Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) const
 {
 	if (binary_search(new_file_name, dirs) < dirs.size() || binary_search(new_file_name, regular_files) < regular_files.size())
 		return ERROR_DIR;
@@ -124,7 +117,7 @@ Current_dir Current_dir::rename(const File& f, const std::string& new_file_name)
 			auto new_data = dirs.erase(index);
 			int new_place = binary_lower(new_file_name, new_data);
 			new_data = std::move(new_data).insert(new_place, dirs[index].rename(new_file_name));
-			return Current_dir(path, std::move(new_data), regular_files);
+			return Current_dir(dir_path, std::move(new_data), regular_files);
 		}
 	}
 	else {
@@ -133,29 +126,21 @@ Current_dir Current_dir::rename(const File& f, const std::string& new_file_name)
 			auto new_data = regular_files.erase(index);
 			int new_place = binary_lower(new_file_name, new_data);
 			new_data = std::move(new_data).insert(new_place, regular_files[index].rename(new_file_name));
-			return Current_dir(path, dirs, std::move(new_data));
+			return Current_dir(dir_path, dirs, std::move(new_data));
 		}
 	}
 
 	return *this;
 }
 
-Current_dir Current_dir::rename(const File& f, const std::string& new_file_name) &&
-{
-	unused(f);
-	unused(new_file_name);
-	//TODO implement this
-	return *this;
-}
-
 const fs::path& Current_dir::get_path() const
 {
-	return path;
+	return dir_path;
 }
 
 
 
-Current_dir Current_dir::insert_file(File&& f) const &
+Current_dir Current_dir::insert_file(const File& f) const
 {
 	if (f.get_type() == 'd') {
 		unsigned place = binary_lower(f.get_name(), dirs);
@@ -167,8 +152,8 @@ Current_dir Current_dir::insert_file(File&& f) const &
 			// file with the same name
 			return ERROR_DIR;
 		}
-		auto new_data = dirs.insert(place, std::forward<File>(f));
-		return Current_dir(path, std::move(new_data), regular_files);
+		auto new_data = dirs.insert(place, f);
+		return Current_dir(dir_path, std::move(new_data), regular_files);
 	}
 	else {
 		unsigned place = binary_lower(f.get_name(), regular_files);
@@ -179,22 +164,15 @@ Current_dir Current_dir::insert_file(File&& f) const &
 			// dir with the same name
 			return ERROR_DIR;
 		}
-		auto new_data = regular_files.insert(place, std::forward<File>(f));
-		return Current_dir(path, dirs, std::move(new_data));
+		auto new_data = regular_files.insert(place, f);
+		return Current_dir(dir_path, dirs, std::move(new_data));
 	}
 
 	return ERROR_DIR;
 }
 
-Current_dir Current_dir::insert_file(File&& f) &&
-{
-	unused(f);
-	//TODO implement this
-	return *this;
-}
 
-
-Current_dir Current_dir::delete_file(const File& f) const &
+Current_dir Current_dir::delete_file(const File& f) const
 {
 	if (f.get_type() == 'd') {
 		unsigned index = binary_search(f.get_name(), dirs);
@@ -202,7 +180,7 @@ Current_dir Current_dir::delete_file(const File& f) const &
 			// dir doesnt exist
 			return ERROR_DIR;
 		}
-		return Current_dir(path, dirs.erase(index), regular_files);
+		return Current_dir(dir_path, dirs.erase(index), regular_files);
 	}
 	else {
 		unsigned index = binary_search(f.get_name(), regular_files);
@@ -210,49 +188,14 @@ Current_dir Current_dir::delete_file(const File& f) const &
 			// regular file doesnt exist
 			return ERROR_DIR;
 		}
-		return Current_dir(path, dirs, regular_files.erase(index));
+		return Current_dir(dir_path, dirs, regular_files.erase(index));
 	}
 
 	return ERROR_DIR;
 }
 
-Current_dir Current_dir::delete_file(const File& f) &&
-{
-	unused(f);
-	//TODO implement this
-	return *this;
-}
 
-
-const File Current_dir::find_by_fname(const std::string &file_name) const
-{
-	auto num_of_files = regular_files.size();
-	if (num_of_files > 0) {	
-		auto index = binary_search(file_name, regular_files);
-		if (index != regular_files.size())
-			return regular_files[index];
-	}
-
-	auto num_of_dirs = dirs.size();
-	if (num_of_dirs > 0) {	
-		auto index = binary_search(file_name, dirs);
-
-		if (index != dirs.size())
-			return dirs[index];
-
-		// if nothing found and num_of_dirs > 0 return first dir
-		return dirs[0];
-	}
-	
-	// if nothing found and num_of_files > 0 return first file
-	if (num_of_files > 0)
-		return regular_files[0];
-	
-	// If nothing found return empty file object
-	return File("");
-}
-
-int Current_dir::get_index_by_name(const std::string &file_name) const
+std::size_t Current_dir::get_index_by_name(const std::string &file_name) const
 {
 	auto index = binary_search(file_name, regular_files);
 	if (index != regular_files.size())
@@ -262,21 +205,21 @@ int Current_dir::get_index_by_name(const std::string &file_name) const
 	if (index != dirs.size())
 		return index;
 
-	return -1;
+	return get_num_of_files();
 }
 
-std::size_t Current_dir::get_num_of_regular_files()
+std::size_t Current_dir::get_num_of_regular_files() const
 {
 	return regular_files.size();
 }
 
-std::size_t Current_dir::get_num_of_dirs() 
+std::size_t Current_dir::get_num_of_dirs() const
 {
 	return dirs.size();
 
 }
 
-std::size_t Current_dir::get_num_of_files() 
+std::size_t Current_dir::get_num_of_files() const
 {
 	return regular_files.size() + dirs.size();
 }

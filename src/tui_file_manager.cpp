@@ -55,7 +55,7 @@ sig::Slot<void()> delete_file(File_manager_tui& fm)
 
 		std::size_t index = fm.flisting.selected_index_;
 		int new_index = index-1;
-		auto file = fm.curdir.get_by_index(fm.offset + index);
+		auto file = fm.curdir.get_file_by_index(fm.offset + index);
 		std::string file_name = file.get_name();
 
 	    	// Yes slot
@@ -243,7 +243,7 @@ sig::Slot<void()> change_file(File_manager_tui& fm)
 {
     sig::Slot<void()> slot{[&fm] 
     {
-		fm.file_info.set_file(fm.curdir.get_by_index(fm.offset+fm.flisting.selected_index_));
+		fm.file_info.set_file(fm.curdir.get_file_by_index(fm.offset+fm.flisting.selected_index_));
     }};
 
     slot.track(fm.flisting.destroyed);
@@ -257,7 +257,7 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 		if (fm.flisting.items_.empty())
 			return;
 
-		auto selected_file = fm.curdir.get_by_index(fm.offset+fm.flisting.selected_index_);
+		auto selected_file = fm.curdir.get_file_by_index(fm.offset+fm.flisting.selected_index_);
 		std::string file_name = selected_file.get_name();
 
 		fm.insert_widget.change_title("Rename file " + file_name);
@@ -402,7 +402,7 @@ sig::Slot<void()> exec_command(File_manager_tui& fm)
 
 		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& command) {
 
-			auto selected_file = fm.curdir.get_by_index(fm.offset+fm.flisting.selected_index_);
+			auto selected_file = fm.curdir.get_file_by_index(fm.offset+fm.flisting.selected_index_);
 			std::string file_name = selected_file.get_name();
 			fs::path file_path = fm.curdir.get_path() / file_name;
 			std::stringstream ss1;
@@ -481,9 +481,9 @@ void File_manager_tui::set_items()
 
     	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > menu_items;
 	for (std::size_t i = l; i < r ; i++) {
-		File f = curdir.get_by_index(i);
-		if (f.get_type() == 'd' && fs::exists(this->curdir.path / f.get_name())) {
-				menu_items.emplace_back(std::make_tuple(f.get_name(), chdir(*this, this->curdir.path / f.get_name())));
+		File f = curdir.get_file_by_index(i);
+		if (f.get_type() == 'd' && fs::exists(curdir.get_path() / f.get_name())) {
+				menu_items.emplace_back(std::make_tuple(f.get_name(), chdir(*this, curdir.get_path() / f.get_name())));
 		} else {
 			menu_items.emplace_back(std::make_tuple(f.get_name(), opt::none));
 		}
@@ -606,10 +606,10 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind, in
 	curdir = new_curdir;
 
 	// set info
-	if (curdir.dirs.size() > 0) 
-		file_info.set_file(curdir.dirs[0]);
-	else if (curdir.regular_files.size() > 0) 
-		file_info.set_file(curdir.regular_files[0]);	
+	if (curdir.get_num_of_dirs() > 0) 
+		file_info.set_file(curdir.get_dir_by_index(0));
+	else if (curdir.get_num_of_regular_files() > 0) 
+		file_info.set_file(curdir.get_regular_file_by_index(0));
 	else 
 		file_info.set_file("Empty directory", "", "");
 

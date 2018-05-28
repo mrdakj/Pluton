@@ -1,5 +1,6 @@
 #include "tui_fm_menu.hpp"
 #include <fstream>
+#define unused(x) ((void)x)
 
 Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
 
@@ -189,6 +190,7 @@ bool Fm_menu::resize_event(Area new_size, Area old_size) {
 
 
 bool Fm_menu::key_press_event(Key key, char symbol) {
+	unused(symbol);
     if (key == Key::Arrow_down || key == Key::j) {
         select_down();
     } else if (key == Key::Arrow_up || key == Key::k) {
@@ -219,6 +221,10 @@ bool Fm_menu::mouse_press_event_filter(Event_handler* receiver,
                                     Point global,
                                     Point local,
                                     std::uint8_t device_id) {
+	unused(receiver);
+	unused(global);
+	unused(local);
+	unused(device_id);
     if (button == Mouse_button::ScrollUp) {
         select_up();
         return true;
