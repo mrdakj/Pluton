@@ -24,6 +24,9 @@ public:
 	char get_type() const;
 	unsigned get_size() const;
 	const std::string get_info() const;
+
+	bool is_dir() const;
+	bool is_regular() const;
 };
 
 #endif /* FILE_HPP */

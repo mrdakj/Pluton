@@ -45,3 +45,14 @@ const std::string File::get_info() const
 	return info.str();
 }
 
+
+bool File::is_dir() const
+{
+	return type == 'd';
+}
+
+bool File::is_regular() const
+{
+
+	return type == 'r';
+}
