@@ -13,6 +13,8 @@ private:
 	immer::flex_vector<File> dirs;
 	immer::flex_vector<File> regular_files;
 
+	void set_error_dir();
+
 public:
 	Current_dir(const std::string& dir_path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files);
 	Current_dir(const std::string& dir_path);
@@ -23,11 +25,19 @@ public:
 	std::size_t get_num_of_regular_files() const;
 	std::size_t get_num_of_dirs() const;
 
+	// get a file from an imaginary vector dirs+regular_files
 	const File& get_file_by_index(unsigned i) const;
+	// get a file from regular_files
 	const File& get_regular_file_by_index(unsigned i) const;
+	// get a file from dirs
 	const File& get_dir_by_index(unsigned i) const;
 
-	std::size_t get_index_by_name(const std::string& file_name) const;
+	// get an index from an imaginary vector dirs+regular_files
+	std::size_t get_file_index(const std::string& file_name) const;
+	// get an index from regular_files
+	std::size_t get_regular_file_index(const std::string& file_name) const;
+	// get an index from dirs
+	std::size_t get_dir_index(const std::string& file_name) const;
 
 	Current_dir cd(const fs::path& dir_path) const;
 	Current_dir rename(const File& f, const std::string& new_file_name) const;

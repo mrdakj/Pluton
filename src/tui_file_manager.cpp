@@ -135,7 +135,7 @@ sig::Slot<void()> insert_rfile(File_manager_tui& fm)
 			if (!new_dir.is_error_dir()) {
 				sys::insert_rfile_on_system(fm.curdir.get_path() / text_new_name);
 
-				int index = new_dir.get_index_by_name(text_new_name);
+				int index = new_dir.get_file_index(text_new_name);
 				auto height = fm.flisting.get_menu_height();
 
 				fm.set_directory(new_dir, true, ((int)index/height)*height);
@@ -200,7 +200,7 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 
 			if (!new_dir.is_error_dir()) {
 				sys::insert_dir_on_system(fm.curdir.get_path() / text_new_name);
-				int index = new_dir.get_index_by_name(text_new_name);
+				int index = new_dir.get_file_index(text_new_name);
 				auto height = fm.flisting.get_menu_height();
 
 				fm.set_directory(new_dir, true, ((int)index/height)*height);
@@ -277,7 +277,7 @@ sig::Slot<void()> rename_selected(File_manager_tui& fm)
 
 			if (!new_dir.is_error_dir()) {
 				sys::rename_on_system(fm.curdir.get_path() / selected_file.get_name(), fm.curdir.get_path() / text_new_name); // important to be before set_directory so one can cd into renamed dir
-				int index = new_dir.get_index_by_name(text_new_name);
+				int index = new_dir.get_file_index(text_new_name);
 				auto height = fm.flisting.get_menu_height();
 
 				fm.set_directory(new_dir, true, ((int)index/height)*height);
