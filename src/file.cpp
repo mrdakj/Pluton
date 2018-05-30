@@ -1,6 +1,7 @@
 #include "file.hpp"
+#include <sstream>
 
-File::File(const std::string& name, char type, unsigned size)
+File::File(const std::string& name, File_type type, std::size_t size)
 	: name(name), type(type), size(size) 
 {
 }
@@ -22,37 +23,33 @@ const std::string& File::get_name() const
 	return name;
 }
 
-char File::get_type() const
+File_type File::get_type() const
 {
 	return type;
 }
 
-unsigned File::get_size() const
+std::size_t File::get_size() const
 {
 	return size;
 }
 
 const std::string File::get_info() const
 {
+	if (type != DIRECTORY && type != REGULAR)
+		return "Unknown";
+
 	std::ostringstream info;
-
-	if (type != 'd' && type != 'r')
-	{
-		exit(1);
-	}
 	info << name << " " << type << " " << size;
-
 	return info.str();
 }
 
 
 bool File::is_dir() const
 {
-	return type == 'd';
+	return type == DIRECTORY;
 }
 
 bool File::is_regular() const
 {
-
-	return type == 'r';
+	return type == REGULAR;
 }

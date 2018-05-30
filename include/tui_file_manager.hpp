@@ -11,45 +11,50 @@
 
 using namespace cppurses;
 
-/* Ovde idu podstvari u fm-u (save_area, italic-bold ...) */
-
-
 class File_manager_tui : public Vertical_layout {
 
 private:
-	void init(const Current_dir& curdir);
+	void update_history(const Current_dir& new_curdir);
+	void set_info();
+	void connect_slots();
 
 public:
 	Current_dir& curdir;
-	std::vector<Current_dir> dirs_history;
-	unsigned history_index;
 	std::size_t offset;
+	std::vector<Current_dir> dirs_history;
+	std::size_t history_index;
+
 
 	File_manager_tui(Current_dir& curdir);
 
-	void set_directory(const Current_dir& new_curdir, bool ind, int offset);
+	void set_directory(const Current_dir& new_curdir, bool save_previous, std::size_t offset);
 	void set_items();
 
-	Titlebar& titlebar{this->make_child<Titlebar>("  P  L  U  T  O  N      F  M")};
+	// title - Pluton FM
+	Titlebar& titlebar;
 
-	Blank_height& bs_cur_dir_before{this->make_child<Blank_height>(2)};
-	Label& current_dir_path{this->make_child<Label>("")};
-	Blank_height& bs_cur_dir_after{this->make_child<Blank_height>(2)};
+	// dir path
+	Blank_height& bs_cur_dir_before;
+	Label& curdir_path_label;
+	Blank_height& bs_cur_dir_after;
 
-	Horizontal_layout& hlayout_dir_finfo{this->make_child<Horizontal_layout>()};
+	Horizontal_layout& hlayout_dir_finfo;
 
-	Vertical_layout& vlayout_left{hlayout_dir_finfo.make_child<Vertical_layout>()};
-	Fm_dirlist_menu& flisting{vlayout_left.make_child<Fm_dirlist_menu>()};
+	// show files here and navigate
+	Vertical_layout& vlayout_left;
+	Fm_dirlist_menu& flisting;
 
-	Vertical_layout& vlayout_right{hlayout_dir_finfo.make_child<Vertical_layout>()};
-	Fm_finfo& file_info{vlayout_right.make_child<Fm_finfo>()};
+	// show file info here
+	Vertical_layout& vlayout_right;
+	Fm_finfo& file_info;
 
-	Fm_text_input_widget &insert_widget{vlayout_right.make_child<Fm_text_input_widget>("","")};
-	Fm_yes_no_menu_widget &confirmation_widget{vlayout_right.make_child<Fm_yes_no_menu_widget>()};
-
+	// input box
+	Fm_text_input_widget& insert_widget;
+	// confirmation box
+	Fm_yes_no_menu_widget& confirmation_widget;
 };
 
-	/* Sloto's related to File_manager_tui */
+// Slots related to File_manager_tui
 sig::Slot<void()> chdir(File_manager_tui &fm, const std::string& dirname);
 sig::Slot<void()> change_file(File_manager_tui &fm); 
 sig::Slot<void()> insert_rfile(File_manager_tui& fm);

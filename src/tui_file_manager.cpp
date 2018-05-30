@@ -2,12 +2,8 @@
 #include "tui_fm_text_input.hpp"
 #include "tui_fm_yes_no_menu_widget.hpp"
 #include "system.hpp"
-#include <unistd.h>
 
-
-using namespace cppurses;
-
-
+// exit application
 sig::Slot<void()> exit_slot(File_manager_tui& fm) 
 {
     sig::Slot<void()> slot{[&fm] {
@@ -130,7 +126,7 @@ sig::Slot<void()> insert_rfile(File_manager_tui& fm)
 
 
 		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& text_new_name) {
-			auto new_dir = fm.curdir.insert_file(File(text_new_name, 'r'));
+			auto new_dir = fm.curdir.insert_file(File(text_new_name, REGULAR));
 			
 			if (!new_dir.is_error_dir()) {
 				sys::insert_rfile_on_system(fm.curdir.get_path() / text_new_name);
@@ -196,7 +192,7 @@ sig::Slot<void()> insert_dir(File_manager_tui& fm)
 
 		sig::Slot<void(const std::string&)> insert_dir_slot{[&fm] (const std::string& text_new_name) {
 
-			auto new_dir = fm.curdir.insert_file(File(text_new_name, 'd'));
+			auto new_dir = fm.curdir.insert_file(File(text_new_name, DIRECTORY));
 
 			if (!new_dir.is_error_dir()) {
 				sys::insert_dir_on_system(fm.curdir.get_path() / text_new_name);
@@ -567,56 +563,74 @@ sig::Slot<void(std::size_t, std::size_t)> reload_items(File_manager_tui &fm)
 
  
 File_manager_tui::File_manager_tui(Current_dir& curdir)
-	: curdir(curdir), history_index(0), offset(0)
+	: curdir(curdir), offset(0), history_index(0), 
+	titlebar{make_child<Titlebar>("  P  L  U  T  O  N      F  M")},
+	bs_cur_dir_before{make_child<Blank_height>(2)}, curdir_path_label{make_child<Label>("")}, bs_cur_dir_after{make_child<Blank_height>(2)},
+	hlayout_dir_finfo{make_child<Horizontal_layout>()},
+	vlayout_left{hlayout_dir_finfo.make_child<Vertical_layout>()}, flisting{vlayout_left.make_child<Fm_dirlist_menu>()},
+	vlayout_right{hlayout_dir_finfo.make_child<Vertical_layout>()}, file_info{vlayout_right.make_child<Fm_finfo>()},
+	insert_widget{vlayout_right.make_child<Fm_text_input_widget>("","")}, confirmation_widget{vlayout_right.make_child<Fm_yes_no_menu_widget>()}
 {
-	init(curdir);
-}
+	// path label style 
+	set_background(curdir_path_label, Color::White);
+	set_foreground(curdir_path_label, Color::Black);
+	curdir_path_label.brush.add_attributes(Attribute::Bold);
 
-
-void File_manager_tui::init(const Current_dir& curdir)
-{
-	set_background(*this, Color::Black);
-	//hlLabel.set_alignment(Alignment::Center);
-	set_background(current_dir_path, Color::White);
-	set_foreground(current_dir_path, Color::Black);
-
+	// don't show insert and confirmation box
 	insert_widget.set_visible(false);
 	confirmation_widget.set_visible(false);
-	Focus::set_focus_to(&flisting);
+
+	// flisting style
 	enable_border(flisting);
+
+	Focus::set_focus_to(&flisting);
 	
-	current_dir_path.brush.add_attributes(Attribute::Bold);
 	set_directory(curdir, false, 0);
 }
 
-void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind, int offset)
+void File_manager_tui::update_history(const Current_dir& new_curdir)
 {
-	this->offset = offset;
-
-	if (ind) {
-		if (dirs_history.empty() || dirs_history[dirs_history.size()-1].get_path() != new_curdir.get_path()) {
-			dirs_history.push_back(curdir);
-			history_index++;
-		}
-
-		dirs_history.push_back(new_curdir);
+	if (dirs_history.empty() || dirs_history.back().get_path() != new_curdir.get_path()) {
+		dirs_history.push_back(curdir);
 		history_index++;
 	}
 
-	curdir = new_curdir;
+	dirs_history.push_back(new_curdir);
+	history_index++;
+}
 
-	// set info
+void File_manager_tui::set_info()
+{
 	if (curdir.get_num_of_dirs() > 0) 
 		file_info.set_file(curdir.get_dir_by_index(0));
 	else if (curdir.get_num_of_regular_files() > 0) 
 		file_info.set_file(curdir.get_regular_file_by_index(0));
 	else 
 		file_info.set_file("Empty directory", "", "");
+}
 
+void File_manager_tui::set_directory(const Current_dir& new_curdir, bool save_previous, std::size_t offset)
+{
+	this->offset = offset;
+
+	// save a previous curdir in a history vector
+	if (save_previous)
+		update_history(new_curdir);
+
+	curdir = new_curdir;
+
+	set_info();
 	set_items();
 
+	curdir_path_label.set_text("  Dir: " + curdir.get_path().string());
 
 	flisting.select_item(0);
+
+	connect_slots();
+}
+
+void File_manager_tui::connect_slots()
+{
 	flisting.selected_file_changed.connect(change_file(*this));	
 
 	if (fs::exists(curdir.get_path().parent_path())) {
@@ -662,7 +676,5 @@ void File_manager_tui::set_directory(const Current_dir& new_curdir, bool ind, in
 
 	flisting.resized.disconnect_all_slots();
 	flisting.resized.connect(reload_items(*this));
-
-	current_dir_path.set_text("  Dir: " + curdir.get_path().string());
 }
 

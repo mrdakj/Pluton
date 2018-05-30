@@ -2,27 +2,24 @@
 #define FILE_HPP 
 
 #include <string>
-#include <sstream>
-#include <experimental/filesystem>
-#include <iostream>
 
-namespace fs = std::experimental::filesystem;
-
+enum File_type { REGULAR = 'r', DIRECTORY = 'd' };
 
 class File {
 private:
 	std::string name;
-	char type;
-	unsigned size;
+	File_type type;
+	std::size_t size;
+
 public:
-	File(const std::string& name, char type = 'r', unsigned size = 0);
+	File(const std::string& name, File_type type = REGULAR, std::size_t size = 0);
 
 	File rename(const std::string& new_name) &&;
 	File rename(const std::string& new_name) const &;
 
+	File_type get_type() const;
+	std::size_t get_size() const;
 	const std::string& get_name() const;
-	char get_type() const;
-	unsigned get_size() const;
 	const std::string get_info() const;
 
 	bool is_dir() const;

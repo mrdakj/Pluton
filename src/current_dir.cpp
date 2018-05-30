@@ -47,12 +47,12 @@ Current_dir::Current_dir(const std::string& dir_path)
 				std::string file_name = p.path().filename().string();
 
 				if (fs::is_directory(p)) {
-					File f(file_name, 'd', std::distance(fs::directory_iterator(p), fs::directory_iterator{}));
+					File f(file_name, DIRECTORY, std::distance(fs::directory_iterator(p), fs::directory_iterator{}));
 					auto index = binary_lower(f.get_name(), dirs);
 					dirs = std::move(dirs).insert(index,std::move(f));
 				}
 				else if (fs::is_regular_file(p)) {
-					File f(file_name, 'r', fs::file_size(p));
+					File f(file_name, REGULAR, fs::file_size(p));
 					auto index = binary_lower(f.get_name(), regular_files);
 					regular_files = std::move(regular_files).insert(index,std::move(f));
 				}
