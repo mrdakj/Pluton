@@ -27,7 +27,7 @@ class Fm_dirlist_menu : public Fm_menu {
 
     Label& title{this->make_child<Label>("Directory listing")};
     Blank_height& blank_after_title{this->make_child<Blank_height>(1)};
-    std::size_t get_menu_height() override;
+    std::size_t get_menu_height() const override;
 
     protected:
     bool paint_event() override;

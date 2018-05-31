@@ -5,15 +5,12 @@
 Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
 
 Fm_menu::Fm_menu()
+	: selected_index_(0)
 {
-    this->focus_policy = Focus_policy::Strong;
-
-    //title_.set_alignment(Alignment::Center);
-    //title_.brush.add_attributes(Attribute::Bold);
-    //space1.background_tile = L'─';
+    focus_policy = Focus_policy::Strong;
 }
 
-void Fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>> > &items) 
+void Fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>>> &items) 
 {
 	clear();
 	for_each(items.cbegin(), items.cend(), [this](auto item) {
@@ -96,13 +93,6 @@ void Fm_menu::select_up(std::size_t n) {
 
 void Fm_menu::select_down(std::size_t n) 
 {
-	/* clear(); */
-	/* add_item("radi"); */
-	/* add_item("jee"); */
-	
-	/* std::ofstream x("rez"); */
-	/* x<< offset << std::endl << right_index << std::endl; */
-
     std::size_t next_index;	
 
     if (items_.empty()) {
@@ -110,11 +100,7 @@ void Fm_menu::select_down(std::size_t n)
     }
     std::size_t new_index{selected_index_ + n};
     if (new_index >= items_.size()) {
-		/* bool updated = check_curdir(offset, right_index); */
-		/* if (updated) */
-		/* 	next_index = 0; */
-		/* else */
-			next_index = items_.size() - 1;
+		next_index = items_.size() - 1;
     } else {
         next_index = new_index;
     }
@@ -122,15 +108,13 @@ void Fm_menu::select_down(std::size_t n)
     select_item(next_index);
 }
 
-void Fm_menu::select_item(std::size_t index) {
+void Fm_menu::select_item(std::size_t index)
+{
     if (items_.empty()) {
-        return;
-    }
-    if (index >= items_.size()) {
-        selected_index_ = items_.size() - 1;
-    } else {
-        selected_index_ = index;
-    }
+		return;
+	}
+
+	selected_index_ = (index >= items_.size()) ? items_.size() - 1 : index;
 
     selected_item_changed();
     update();
@@ -142,6 +126,15 @@ std::size_t Fm_menu::size() const
 }
 
 
+std::size_t Fm_menu::get_selected_index() const
+{
+	return selected_index_;
+}
+
+void Fm_menu::change_selected(std::size_t index)
+{
+	selected_index_ = index;
+}
 
 Glyph_string Fm_menu::get_selected_item_name() const
 {
@@ -150,33 +143,14 @@ Glyph_string Fm_menu::get_selected_item_name() const
 }
 
 
-bool Fm_menu::paint_event() {
-
+bool Fm_menu::paint_event()
+{
 	if (items_.empty())
 		return Vertical_layout::paint_event();
 
-     // Ovo ispod je bilo po default-u
     for (Fm_menu_item& item : items_) {
         item.button.get().brush.remove_attribute(Attribute::Inverse);
     }
-    
-
-   // Radi demonstracije, fiksno stavimo duzinu u koju staje ceo menu 
-   /* std::size_t v_begin = 0; */ 
-   /* std::size_t v_end = this->height() - 3; */
-   
-    /* for (std::size_t i = 0; i < items_.size(); i++) { */
-		/* items_[i].button.get().brush.remove_attribute(Attribute::Inverse); */
-		/* items_[i].button.get().set_visible(true); */
-		
-
-		// Ako je van vidljivog opsega nemoj da ga prikazujes
-		/* if (i < v_begin || i > v_end) { */
-		/* 	items_[i].button.get().set_visible(false); */
-		/* 	/1* remove_child(&items_[i].button.get()); *1/ */
-		/* } */
-
-    /* } */	    
 
     items_[selected_index_].button.get().brush.add_attributes(Attribute::Inverse);
     return Vertical_layout::paint_event();
@@ -184,7 +158,7 @@ bool Fm_menu::paint_event() {
 
 
 bool Fm_menu::resize_event(Area new_size, Area old_size) {
-	this->update();
+	update();
 	return Vertical_layout::resize_event(new_size, old_size);
 }
 
@@ -237,15 +211,17 @@ bool Fm_menu::mouse_press_event_filter(Event_handler* receiver,
 }
 
 /* On press Key::Enter -> Call selected */
-void Fm_menu::call_current_item() {
+void Fm_menu::call_current_item() const
+{
     if (!items_.empty()) {
         items_[selected_index_].selected();
     }
 }
 
 
-std::size_t Fm_menu::get_menu_height(){
-	return this->height();
+std::size_t Fm_menu::get_menu_height() const
+{
+	return height();
 }
 
 

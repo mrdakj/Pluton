@@ -13,11 +13,6 @@ using namespace cppurses;
 
 class File_manager_tui : public Vertical_layout {
 
-private:
-	void update_history(const Current_dir& new_curdir);
-	void set_info();
-	void connect_slots();
-
 public:
 	Current_dir& curdir;
 	std::size_t offset;
@@ -30,6 +25,12 @@ public:
 	void set_directory(const Current_dir& new_curdir, bool save_previous, std::size_t offset);
 	void set_items();
 
+private:
+	void update_history(const Current_dir& new_curdir);
+	void set_info();
+	void connect_slots();
+
+private:
 	// title - Pluton FM
 	Titlebar& titlebar;
 
@@ -39,15 +40,14 @@ public:
 	Blank_height& bs_cur_dir_after;
 
 	Horizontal_layout& hlayout_dir_finfo;
-
-	// show files here and navigate
 	Vertical_layout& vlayout_left;
-	Fm_dirlist_menu& flisting;
-
-	// show file info here
 	Vertical_layout& vlayout_right;
-	Fm_finfo& file_info;
 
+
+public:
+	Fm_dirlist_menu& flisting;
+	// show file info here
+	Fm_finfo& file_info;
 	// input box
 	Fm_text_input_widget& insert_widget;
 	// confirmation box

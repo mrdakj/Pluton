@@ -1,46 +1,56 @@
 #ifndef TUI_FM_MENU
 #define TUI_FM_MENU
-#include <cstddef>
-#include <cstdint>
-#include <functional>
+
 #include <vector>
-
 #include <signals/slot.hpp>
-
-#include <cppurses/painter/glyph_string.hpp>
-#include <cppurses/system/key.hpp>
 #include <cppurses/widget/layouts/vertical_layout.hpp>
 #include <cppurses/widget/widgets/blank_height.hpp>
 #include <cppurses/widget/widgets/push_button.hpp>
-#include "current_dir.hpp"
 
 using namespace cppurses;
 
 class Fm_menu : public Vertical_layout {
-   public:
-	
-	std::size_t selected_index_{0};
-	Fm_menu();
 
+private:
+	std::size_t selected_index_;
+
+    struct Fm_menu_item {
+        explicit Fm_menu_item(Push_button& ref);
+        std::reference_wrapper<Push_button> button;
+
+		// press enter signal
+        sig::Signal<void()> selected;
+    };
+
+    std::vector<Fm_menu_item> items_;
+
+public:
     sig::Signal<void()> selected_item_changed;
     sig::Signal<void()> items_begin_boundary;
     sig::Signal<void()> items_end_boundary;
+	sig::Signal<void()> esc_pressed;
 
     sig::Signal<void()>& add_item(Glyph_string label);
     sig::Signal<void()>& insert_item(Glyph_string label, std::size_t index);
-    sig::Signal<void()> esc_pressed;
 
+	Fm_menu();
+
+	// get selected_index_
+	std::size_t get_selected_index() const;
+	// set selected_index_
+	void change_selected(std::size_t index);
+	void select_item(std::size_t index);
     void remove_item(std::size_t index);
 	void clear();
-
     void select_up(std::size_t n = 1);
     void select_down(std::size_t n = 1);
-    virtual void select_item(std::size_t index);
-
+    void set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>>> &items);
+    void call_current_item() const;
+    virtual std::size_t get_menu_height() const;
     std::size_t size() const;
 	Glyph_string get_selected_item_name() const;
 
-   protected:
+protected:
     bool paint_event() override;
     bool resize_event(Area new_size, Area old_size) override;
 
@@ -56,24 +66,6 @@ class Fm_menu : public Vertical_layout {
                                   Point global,
                                   Point local,
                                   std::uint8_t device_id) override;
-
-
-   private:
-    struct Fm_menu_item {
-        explicit Fm_menu_item(Push_button& ref);
-        std::reference_wrapper<Push_button> button;
-
-	/* Press enter signal */
-        sig::Signal<void()> selected;
-    };
-
-
-   public:
-    std::vector<Fm_menu_item> items_;
-    void set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > &items);
-
-    void call_current_item();
-    virtual std::size_t get_menu_height();
 };
 
 
