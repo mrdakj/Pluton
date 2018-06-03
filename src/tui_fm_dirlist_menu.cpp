@@ -1,6 +1,6 @@
 #include "tui_fm_dirlist_menu.hpp"
 
-Fm_dirlist_menu::Fm_dirlist_menu()
+fm_dirlist_menu::fm_dirlist_menu()
 {
 	this->title.set_alignment(Alignment::Center);
     	this->title.brush.add_attributes(Attribute::Bold);
@@ -16,11 +16,11 @@ Fm_dirlist_menu::Fm_dirlist_menu()
 	//program_output << "Height without menu items: " << height_without_menu_items << std::endl;
 }
 
-bool Fm_dirlist_menu::paint_event() {
-	return Fm_menu::paint_event();
+bool fm_dirlist_menu::paint_event() {
+	return fm_menu::paint_event();
 }
 
-bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
+bool fm_dirlist_menu::key_press_event(Key key, char symbol) {
 
    	if (key == Key::h) {
 		h_pressed();
@@ -51,25 +51,25 @@ bool Fm_dirlist_menu::key_press_event(Key key, char symbol) {
 			items_begin_boundary();
 	}
 
-	return	Fm_menu::key_press_event(key, symbol);
+	return	fm_menu::key_press_event(key, symbol);
 }
 
-bool Fm_dirlist_menu::mouse_press_event(Mouse_button button,
+bool fm_dirlist_menu::mouse_press_event(Mouse_button button,
                              Point global,
                              Point local,
                              std::uint8_t device_id) {
-	return Fm_menu::mouse_move_event(button, global, local, device_id);
+	return fm_menu::mouse_move_event(button, global, local, device_id);
 }
 
-bool Fm_dirlist_menu::mouse_press_event_filter(Event_handler* receiver,
+bool fm_dirlist_menu::mouse_press_event_filter(Event_handler* receiver,
                                     Mouse_button button,
                                     Point global,
                                     Point local,
                                     std::uint8_t device_id) {
-	return Fm_menu::mouse_press_event_filter(receiver, button, global, local, device_id);
+	return fm_menu::mouse_press_event_filter(receiver, button, global, local, device_id);
 }
 
-std::size_t Fm_dirlist_menu::get_menu_height()  const
+std::size_t fm_dirlist_menu::get_menu_height()  const
 {
 	return height() - height_without_menu_items;
 }

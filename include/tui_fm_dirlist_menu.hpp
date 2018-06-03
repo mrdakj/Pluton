@@ -6,13 +6,13 @@
 
 using namespace cppurses;
 
-class Fm_dirlist_menu : public Fm_menu {
+class fm_dirlist_menu : public fm_menu {
 
     public:
-    Fm_dirlist_menu();
+    fm_dirlist_menu();
 
-    sig::Signal<void()>& selected_file_changed{Fm_menu::selected_item_changed};
-    sig::Signal<void()>& esc_pressed{Fm_menu::esc_pressed};
+    sig::Signal<void()>& selected_file_changed{fm_menu::selected_item_changed};
+    sig::Signal<void()>& esc_pressed{fm_menu::esc_pressed};
     sig::Signal<void()> d_pressed;
     sig::Signal<void()> backspace_pressed;
     sig::Signal<void()> h_pressed;

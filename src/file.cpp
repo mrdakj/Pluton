@@ -2,39 +2,39 @@
 #include <sstream>
 
 
-File::File(const std::string& name, File_type type, std::size_t size)
+file::file(const std::string& name, file_type type, std::size_t size)
 	: name(name), type(type), size(size) 
 {
 }
 
-File File::rename(const std::string& new_name) &&
+file file::rename(const std::string& new_name) &&
 {
-	File tmp(std::forward<File>(*this));
+	file tmp(std::forward<file>(*this));
 	tmp.name = new_name;
 	return tmp;
 }
 
-File File::rename(const std::string& new_name) const &
+file file::rename(const std::string& new_name) const &
 {
-	return File(new_name, type, size); 
+	return file(new_name, type, size); 
 }
 
-const std::string& File::get_name() const
+const std::string& file::get_name() const
 {
 	return name;
 }
 
-File_type File::get_type() const
+file_type file::get_type() const
 {
 	return type;
 }
 
-std::size_t File::get_size() const
+std::size_t file::get_size() const
 {
 	return size;
 }
 
-const std::string File::get_info() const
+const std::string file::get_info() const
 {
 	if (type != DIRECTORY && type != REGULAR)
 		return "Unknown";
@@ -45,12 +45,12 @@ const std::string File::get_info() const
 }
 
 
-bool File::is_dir() const
+bool file::is_dir() const
 {
 	return type == DIRECTORY;
 }
 
-bool File::is_regular() const
+bool file::is_regular() const
 {
 	return type == REGULAR;
 }

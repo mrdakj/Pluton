@@ -3,21 +3,21 @@
 
 #include <string>
 
-enum File_type { REGULAR = 'r', DIRECTORY = 'd' };
+enum file_type { REGULAR = 'r', DIRECTORY = 'd' };
 
-class File {
+class file {
 private:
 	std::string name;
-	File_type type;
+	file_type type;
 	std::size_t size;
 
 public:
-	File(const std::string& name, File_type type = REGULAR, std::size_t size = 0);
+	file(const std::string& name, file_type type = REGULAR, std::size_t size = 0);
 
-	File rename(const std::string& new_name) &&;
-	File rename(const std::string& new_name) const &;
+	file rename(const std::string& new_name) &&;
+	file rename(const std::string& new_name) const &;
 
-	File_type get_type() const;
+	file_type get_type() const;
 	std::size_t get_size() const;
 	const std::string& get_name() const;
 	const std::string get_info() const;

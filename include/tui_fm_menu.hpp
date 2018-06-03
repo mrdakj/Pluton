@@ -9,20 +9,20 @@
 
 using namespace cppurses;
 
-class Fm_menu : public Vertical_layout {
+class fm_menu : public Vertical_layout {
 
 private:
 	std::size_t selected_index_;
 
-    struct Fm_menu_item {
-        explicit Fm_menu_item(Push_button& ref);
+    struct fm_menu_item {
+        explicit fm_menu_item(Push_button& ref);
         std::reference_wrapper<Push_button> button;
 
 		// press enter signal
         sig::Signal<void()> selected;
     };
 
-    std::vector<Fm_menu_item> items_;
+    std::vector<fm_menu_item> items_;
 
 public:
     sig::Signal<void()> selected_item_changed;
@@ -33,7 +33,7 @@ public:
     sig::Signal<void()>& add_item(Glyph_string label);
     sig::Signal<void()>& insert_item(Glyph_string label, std::size_t index);
 
-	Fm_menu();
+	fm_menu();
 
 	// get selected_index_
 	std::size_t get_selected_index() const;
@@ -69,13 +69,13 @@ protected:
 };
 
 
-sig::Slot<void(std::size_t)> select_up(Fm_menu& m);
-sig::Slot<void()> select_up(Fm_menu& m, std::size_t n);
+sig::Slot<void(std::size_t)> select_up(fm_menu& m);
+sig::Slot<void()> select_up(fm_menu& m, std::size_t n);
 
-sig::Slot<void(std::size_t)> select_down(Fm_menu& m);
-sig::Slot<void()> select_down(Fm_menu& m, std::size_t n);
+sig::Slot<void(std::size_t)> select_down(fm_menu& m);
+sig::Slot<void()> select_down(fm_menu& m, std::size_t n);
 
-sig::Slot<void(std::size_t)> select_item(Fm_menu& m);
-sig::Slot<void()> select_item(Fm_menu& m, std::size_t index);
+sig::Slot<void(std::size_t)> select_item(fm_menu& m);
+sig::Slot<void()> select_item(fm_menu& m, std::size_t index);
 
 #endif // TUI_FM_MENU

@@ -6,11 +6,11 @@
 
 using namespace cppurses;
 
-class Fm_yes_no_menu_widget : public Vertical_layout {
+class fm_yes_no_menu_widget : public Vertical_layout {
    public:
 	
-	Fm_yes_no_menu_widget(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot);
-	Fm_yes_no_menu_widget();
+	fm_yes_no_menu_widget(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot);
+	fm_yes_no_menu_widget();
 	void add_yes_no_slots(sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot);
 	void add_yes_no_slots(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot);
 	void grab_focus();
@@ -21,7 +21,7 @@ class Fm_yes_no_menu_widget : public Vertical_layout {
 	Blank_height& blank_after_question_first{this->make_child<Blank_height>(1)};
 	Blank_height& blank_after_question_second{this->make_child<Blank_height>(1)};
 
-	Fm_menu& options_menu{this->make_child<Fm_menu>()};
+	fm_menu& options_menu{this->make_child<fm_menu>()};
 
 };
 

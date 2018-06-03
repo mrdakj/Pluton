@@ -7,7 +7,7 @@
 
 using namespace cppurses;
 
-class Fm_finfo : public Vertical_layout {
+class fm_finfo : public Vertical_layout {
 
 
 	Label& title{this->make_child<Label>("Info")};
@@ -25,11 +25,11 @@ class Fm_finfo : public Vertical_layout {
 
 public:
 
-	Fm_finfo(const File& f);
-	Fm_finfo();
+	fm_finfo(const file& f);
+	fm_finfo();
 
 	void set_file(Glyph_string fname, Glyph_string ftype, Glyph_string fsize);
-	void set_file(const File& f);
+	void set_file(const file& f);
 
 };
 

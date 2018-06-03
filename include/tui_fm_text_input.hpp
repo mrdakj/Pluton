@@ -5,7 +5,7 @@
 
 using namespace cppurses;
 
-class Fm_text_input_widget : public Vertical_layout {
+class fm_text_input_widget : public Vertical_layout {
 private:
 	class Text_input : public Line_edit {
 
@@ -31,7 +31,7 @@ public:
 
 	sig::Signal<void(std::string)> &editing_finished;
 	sig::Signal<void()> &editing_canceled;
-	Fm_text_input_widget(const Glyph_string &title, const Glyph_string &info_message, const Glyph_string &initial_text=""); 
+	fm_text_input_widget(const Glyph_string &title, const Glyph_string &info_message, const Glyph_string &initial_text=""); 
 
 	void grab_focus(); 
 	void change_title(const std::string& new_title);

@@ -2,15 +2,15 @@
 #include <fstream>
 #define unused(x) ((void)x)
 
-Fm_menu::Fm_menu_item::Fm_menu_item(Push_button& ref) : button{ref} {}
+fm_menu::fm_menu_item::fm_menu_item(Push_button& ref) : button{ref} {}
 
-Fm_menu::Fm_menu()
+fm_menu::fm_menu()
 	: selected_index_(0)
 {
     focus_policy = Focus_policy::Strong;
 }
 
-void Fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>>> &items) 
+void fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>>> &items) 
 {
 	clear();
 	for_each(items.cbegin(), items.cend(), [this](auto item) {
@@ -23,7 +23,7 @@ void Fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::O
 }
 
 
-sig::Signal<void()>& Fm_menu::add_item(Glyph_string label)
+sig::Signal<void()>& fm_menu::add_item(Glyph_string label)
 {
     Push_button& button_ref{this->make_child<Push_button>(std::move(label))};
     button_ref.install_event_filter(this);
@@ -38,14 +38,14 @@ sig::Signal<void()>& Fm_menu::add_item(Glyph_string label)
     return signal_ref;
 }
 
-sig::Signal<void()>& Fm_menu::insert_item(Glyph_string label, std::size_t index)
+sig::Signal<void()>& fm_menu::insert_item(Glyph_string label, std::size_t index)
 {
     auto button_ptr{std::make_unique<Push_button>(std::move(label))};
     button_ptr->install_event_filter(this);
     button_ptr->height_policy.type(Size_policy::Fixed);
     button_ptr->height_policy.hint(1);
     Push_button& new_button{*button_ptr};
-    items_.insert(std::begin(items_) + index, Fm_menu_item{new_button});
+    items_.insert(std::begin(items_) + index, fm_menu_item{new_button});
     auto& signal_ref{items_[index].selected};
     new_button.clicked.connect([this, index] { items_[index].selected(); });
 
@@ -53,7 +53,7 @@ sig::Signal<void()>& Fm_menu::insert_item(Glyph_string label, std::size_t index)
     return signal_ref;
 }
 
-void Fm_menu::remove_item(std::size_t index) 
+void fm_menu::remove_item(std::size_t index) 
 {
     if (index >= items_.size()) {
         return;
@@ -68,7 +68,7 @@ void Fm_menu::remove_item(std::size_t index)
     update();
 }
 
-void Fm_menu::clear()
+void fm_menu::clear()
 {
 	for (unsigned index = 0; index < items_.size(); index++)
 		remove_child(&items_[index].button.get());
@@ -77,7 +77,7 @@ void Fm_menu::clear()
 	update();
 }
 
-void Fm_menu::select_up(std::size_t n) {
+void fm_menu::select_up(std::size_t n) {
 
     std::size_t next_index;
 
@@ -91,7 +91,7 @@ void Fm_menu::select_up(std::size_t n) {
 }
 
 
-void Fm_menu::select_down(std::size_t n) 
+void fm_menu::select_down(std::size_t n) 
 {
     std::size_t next_index;	
 
@@ -108,7 +108,7 @@ void Fm_menu::select_down(std::size_t n)
     select_item(next_index);
 }
 
-void Fm_menu::select_item(std::size_t index)
+void fm_menu::select_item(std::size_t index)
 {
     if (items_.empty()) {
 		return;
@@ -120,35 +120,35 @@ void Fm_menu::select_item(std::size_t index)
     update();
 }
 
-std::size_t Fm_menu::size() const 
+std::size_t fm_menu::size() const 
 {
     return items_.size();
 }
 
 
-std::size_t Fm_menu::get_selected_index() const
+std::size_t fm_menu::get_selected_index() const
 {
 	return selected_index_;
 }
 
-void Fm_menu::change_selected(std::size_t index)
+void fm_menu::change_selected(std::size_t index)
 {
 	selected_index_ = index;
 }
 
-Glyph_string Fm_menu::get_selected_item_name() const
+Glyph_string fm_menu::get_selected_item_name() const
 {
 	Push_button & tmpbut = items_[selected_index_].button;
 	return tmpbut.contents();
 }
 
 
-bool Fm_menu::paint_event()
+bool fm_menu::paint_event()
 {
 	if (items_.empty())
 		return Vertical_layout::paint_event();
 
-    for (Fm_menu_item& item : items_) {
+    for (fm_menu_item& item : items_) {
         item.button.get().brush.remove_attribute(Attribute::Inverse);
     }
 
@@ -157,13 +157,13 @@ bool Fm_menu::paint_event()
 }
 
 
-bool Fm_menu::resize_event(Area new_size, Area old_size) {
+bool fm_menu::resize_event(Area new_size, Area old_size) {
 	update();
 	return Vertical_layout::resize_event(new_size, old_size);
 }
 
 
-bool Fm_menu::key_press_event(Key key, char symbol) {
+bool fm_menu::key_press_event(Key key, char symbol) {
 	unused(symbol);
     if (key == Key::Arrow_down || key == Key::j) {
         select_down();
@@ -178,7 +178,7 @@ bool Fm_menu::key_press_event(Key key, char symbol) {
     return true;
 }
 
-bool Fm_menu::mouse_press_event(Mouse_button button,
+bool fm_menu::mouse_press_event(Mouse_button button,
                              Point global,
                              Point local,
                              std::uint8_t device_id) {
@@ -190,7 +190,7 @@ bool Fm_menu::mouse_press_event(Mouse_button button,
     return Widget::mouse_press_event(button, global, local, device_id);
 }
 
-bool Fm_menu::mouse_press_event_filter(Event_handler* receiver,
+bool fm_menu::mouse_press_event_filter(Event_handler* receiver,
                                     Mouse_button button,
                                     Point global,
                                     Point local,
@@ -211,7 +211,7 @@ bool Fm_menu::mouse_press_event_filter(Event_handler* receiver,
 }
 
 /* On press Key::Enter -> Call selected */
-void Fm_menu::call_current_item() const
+void fm_menu::call_current_item() const
 {
     if (!items_.empty()) {
         items_[selected_index_].selected();
@@ -219,25 +219,25 @@ void Fm_menu::call_current_item() const
 }
 
 
-std::size_t Fm_menu::get_menu_height() const
+std::size_t fm_menu::get_menu_height() const
 {
 	return height();
 }
 
 
-sig::Slot<void(std::size_t)> select_up(Fm_menu& m) {
+sig::Slot<void(std::size_t)> select_up(fm_menu& m) {
     sig::Slot<void(std::size_t)> slot{[&m](auto n) { m.select_up(n); }};
     slot.track(m.destroyed);
     return slot;
 }
 
-sig::Slot<void()> select_up(Fm_menu& m, std::size_t n) {
+sig::Slot<void()> select_up(fm_menu& m, std::size_t n) {
     sig::Slot<void()> slot{[&m, n] { m.select_up(n); }};
     slot.track(m.destroyed);
     return slot;
 }
 
-sig::Slot<void(std::size_t)> select_down(Fm_menu& m) {
+sig::Slot<void(std::size_t)> select_down(fm_menu& m) {
     sig::Slot<void(std::size_t)> slot{[&m](auto n) {
 
 		m.select_down(n);
@@ -246,21 +246,21 @@ sig::Slot<void(std::size_t)> select_down(Fm_menu& m) {
     return slot;
 }
 
-sig::Slot<void()> select_down(Fm_menu& m, std::size_t n) {
+sig::Slot<void()> select_down(fm_menu& m, std::size_t n) {
     sig::Slot<void()> slot{[&m, n] {
 		m.select_down(n); }};
     slot.track(m.destroyed);
     return slot;
 }
 
-sig::Slot<void(std::size_t)> select_item(Fm_menu& m) {
+sig::Slot<void(std::size_t)> select_item(fm_menu& m) {
     sig::Slot<void(std::size_t)> slot{
         [&m](auto index) { m.select_item(index); }};
     slot.track(m.destroyed);
     return slot;
 }
 
-sig::Slot<void()> select_item(Fm_menu& m, std::size_t index) {
+sig::Slot<void()> select_item(fm_menu& m, std::size_t index) {
     sig::Slot<void()> slot{[&m, index] { m.select_item(index); }};
     slot.track(m.destroyed);
     return slot;

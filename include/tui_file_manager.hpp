@@ -11,22 +11,22 @@
 
 using namespace cppurses;
 
-class File_manager_tui : public Vertical_layout {
+class file_manager_tui : public Vertical_layout {
 
 public:
-	Current_dir& curdir;
+	current_dir& curdir;
 	std::size_t offset;
-	std::vector<Current_dir> dirs_history;
+	std::vector<current_dir> dirs_history;
 	std::size_t history_index;
 
 
-	File_manager_tui(Current_dir& curdir);
+	file_manager_tui(current_dir& curdir);
 
-	void set_directory(const Current_dir& new_curdir, bool save_previous, std::size_t offset);
+	void set_directory(const current_dir& new_curdir, bool save_previous, std::size_t offset);
 	void set_items();
 
 private:
-	void update_history(const Current_dir& new_curdir);
+	void update_history(const current_dir& new_curdir);
 	void set_info();
 	void connect_slots();
 
@@ -45,22 +45,22 @@ private:
 
 
 public:
-	Fm_dirlist_menu& flisting;
+	fm_dirlist_menu& flisting;
 	// show file info here
-	Fm_finfo& file_info;
+	fm_finfo& file_info;
 	// input box
-	Fm_text_input_widget& insert_widget;
+	fm_text_input_widget& insert_widget;
 	// confirmation box
-	Fm_yes_no_menu_widget& confirmation_widget;
+	fm_yes_no_menu_widget& confirmation_widget;
 };
 
-// Slots related to File_manager_tui
-sig::Slot<void()> chdir(File_manager_tui &fm, const std::string& dirname);
-sig::Slot<void()> change_file(File_manager_tui &fm); 
-sig::Slot<void()> insert_rfile(File_manager_tui& fm);
-sig::Slot<void()> insert_dir(File_manager_tui& fm);
-sig::Slot<void()> rename_selected(File_manager_tui& fm);
-sig::Slot<void()> exec_command(File_manager_tui& fm);
+// Slots related to file_manager_tui
+sig::Slot<void()> chdir(file_manager_tui &fm, const std::string& dirname);
+sig::Slot<void()> change_file(file_manager_tui &fm); 
+sig::Slot<void()> insert_rfile(file_manager_tui& fm);
+sig::Slot<void()> insert_dir(file_manager_tui& fm);
+sig::Slot<void()> rename_selected(file_manager_tui& fm);
+sig::Slot<void()> exec_command(file_manager_tui& fm);
 
 
 #endif // TUI_FILE_MANAGER
