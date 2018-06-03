@@ -26,4 +26,5 @@ public:
 	bool is_regular() const;
 };
 
+
 #endif /* FILE_HPP */

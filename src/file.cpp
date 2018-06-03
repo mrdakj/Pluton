@@ -1,6 +1,7 @@
 #include "file.hpp"
 #include <sstream>
 
+
 File::File(const std::string& name, File_type type, std::size_t size)
 	: name(name), type(type), size(size) 
 {

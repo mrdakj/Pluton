@@ -4,33 +4,41 @@
 #include <immer/flex_vector.hpp>
 #include <experimental/filesystem>
 #include "file.hpp"
+#include <variant>
+#include <functional>
+#include <iostream>
+#include <optional>
 
 namespace fs = std::experimental::filesystem;
 
+
 class Current_dir {
 private:
-	fs::path dir_path;
-	immer::flex_vector<File> dirs;
-	immer::flex_vector<File> regular_files;
+	struct data {
+		fs::path dir_path;
+		immer::flex_vector<File> dirs;
+		immer::flex_vector<File> regular_files;
+	};
 
-	void set_error_dir();
 
-public:
+	std::variant<data, std::string> m_data;
+
 	Current_dir(const std::string& dir_path, immer::flex_vector<File> dirs, immer::flex_vector<File> regular_files);
-	Current_dir(const std::string& dir_path);
+public:
+	Current_dir(const std::string& dir_path, bool error_flag = false);
 
-	const fs::path& get_path() const;
+	std::optional<std::reference_wrapper<const fs::path>> get_path() const;
 
 	std::size_t get_num_of_files() const;
 	std::size_t get_num_of_regular_files() const;
 	std::size_t get_num_of_dirs() const;
 
 	// get a file from an imaginary vector dirs+regular_files
-	const File& get_file_by_index(unsigned i) const;
+	std::optional<std::reference_wrapper<const File>> get_file_by_index(unsigned i) const;
 	// get a file from regular_files
-	const File& get_regular_file_by_index(unsigned i) const;
+	std::optional<std::reference_wrapper<const File>> get_regular_file_by_index(unsigned i) const;
 	// get a file from dirs
-	const File& get_dir_by_index(unsigned i) const;
+	std::optional<std::reference_wrapper<const File>> get_dir_by_index(unsigned i) const;
 
 	// get an index from an imaginary vector dirs+regular_files
 	std::size_t get_file_index(const std::string& file_name) const;
