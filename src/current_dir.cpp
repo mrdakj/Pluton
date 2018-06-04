@@ -4,6 +4,8 @@
 #include <functional>
 #include <iostream>
 #include <optional>
+#include <range/v3/view.hpp>
+#include <range/v3/action/sort.hpp>
 #define unused(x) ((void)x)
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
@@ -58,20 +60,24 @@ current_dir::current_dir(const std::string& dir_path, bool error_flag)
 		try {
 			current_dir::data data;
 			data.dir_path = dir_path;
-			for (auto&& p : fs::directory_iterator(dir_path)) {
-				std::string file_name = p.path().filename().string();
 
-				if (fs::is_directory(p)) {
-					file f(file_name, DIRECTORY, std::distance(fs::directory_iterator(p), fs::directory_iterator{}));
-					auto index = binary_lower(f.get_name(), data.dirs);
-					data.dirs = std::move(data.dirs).insert(index,std::move(f));
-				}
-				else if (fs::is_regular_file(p)) {
-					file f(file_name, REGULAR, fs::file_size(p));
-					auto index = binary_lower(f.get_name(), data.regular_files);
-					data.regular_files = std::move(data.regular_files).insert(index,std::move(f));
-				}
-			}
+			fs::directory_iterator ls { dir_path };
+			auto regular_files = ls 
+						| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_regular_file(entry.path()); })
+						| ranges::v3::view::transform([](const fs::path& path) { return file(path.filename(), REGULAR, fs::file_size(path)); })
+						| ranges::v3::to_vector
+						| ranges::v3::action::sort([](const file& a, const file& b) { return a.get_name() < b.get_name(); });
+
+			data.regular_files = immer::flex_vector<file>{regular_files.begin(), regular_files.end()};
+
+			fs::directory_iterator ls2 { dir_path };
+			auto dirs = ls2 
+						| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_directory(entry.path()); })
+						| ranges::v3::view::transform([](const fs::path& path) { return file(path.filename(), DIRECTORY, std::distance(fs::directory_iterator(path), fs::directory_iterator{})); })
+						| ranges::v3::to_vector
+						| ranges::v3::action::sort([](const file& a, const file& b) { return a.get_name() < b.get_name(); });
+
+			data.dirs = immer::flex_vector<file>{dirs.begin(), dirs.end()};
 
 			m_data = std::move(data);
 		}
