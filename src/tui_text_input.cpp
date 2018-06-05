@@ -4,8 +4,7 @@
 bool fm_text_input_widget::Text_input::key_press_event(Key key, char symbol)
 {
 	/* Extend key press-es here */
-	if (key == Key::Escape) 
-	{
+	if (key == Key::Escape) {
 		editing_canceled();
 	}
 
@@ -18,7 +17,7 @@ bool fm_text_input_widget::Text_input::focus_in_event()
 {
 	/* Bypass focus_in of text input 
 	 * wich clears the placeholder */
-	
+
 	return Textbox::focus_in_event();
 }
 
@@ -32,13 +31,11 @@ fm_text_input_widget::Text_input::Text_input(const Glyph_string& initial_text) :
 
 
 fm_text_input_widget::fm_text_input_widget(const Glyph_string &title, const Glyph_string &info_message, const Glyph_string &initial_text) : 
-	title(this->make_child<Label>(title)), info_message(this->make_child<Label>(info_message)), text_input(this->make_child<Text_input>(initial_text)),
+	title(make_child<Label>(title)), info_message(make_child<Label>(info_message)), text_input(make_child<Text_input>(initial_text)),
 	editing_finished(text_input.editing_finished), editing_canceled(text_input.editing_canceled)
 {
 	Focus::set_focus_to(&text_input);
-	//lbl.set_text(initial_text);
-	//ti.set_text(initial_text);
-	
+
 	this->title.set_alignment(Alignment::Center);
 	this->title.brush.add_attributes(Attribute::Bold);
 	this->title_blank.background_tile = L'─';
@@ -55,7 +52,6 @@ void fm_text_input_widget::grab_focus()
 void fm_text_input_widget::change_title(const std::string& new_title)
 {
 	title.contents() = new_title;
-
 }
 
 void fm_text_input_widget::change_info_message(const std::string& message)

@@ -2,9 +2,7 @@
 
 fm_yes_no_menu_widget::fm_yes_no_menu_widget(std::string question, sig::Slot<void()> yes_slot, sig::Slot<void()> no_slot)  
 {
-	//this->title.set_alignment(Alignment::Center);
-    	//this->title.brush.add_attributes(Attribute::Bold);
-    	this->blank_after_question_second.background_tile = L'─';
+	blank_after_question_second.background_tile = L'─';
 	enable_border(*this);
 
 	this->question.set_text(question);
@@ -15,7 +13,7 @@ fm_yes_no_menu_widget::fm_yes_no_menu_widget(std::string question, sig::Slot<voi
 
 fm_yes_no_menu_widget::fm_yes_no_menu_widget()  
 {
-    	this->blank_after_question_second.background_tile = L'─';
+	blank_after_question_second.background_tile = L'─';
 	enable_border(*this);
 }
 
