@@ -43,11 +43,11 @@ bool fm_dirlist_menu::key_press_event(Key key, char symbol) {
 	} else if (key == Key::p) {
 		redo();
 	} else if (key == Key::j) {
-		if (get_selected_index() >= this->size()-1)
+		if (selected_index() >= this->size()-1)
 			items_end_boundary();
 
 	} else if (key == Key::k) {
-		if (get_selected_index() <= 0)
+		if (selected_index() <= 0)
 			items_begin_boundary();
 	}
 
@@ -69,7 +69,7 @@ bool fm_dirlist_menu::mouse_press_event_filter(Event_handler* receiver,
 	return fm_menu::mouse_press_event_filter(receiver, button, global, local, device_id);
 }
 
-std::size_t fm_dirlist_menu::get_menu_height()  const
+std::size_t fm_dirlist_menu::menu_height()  const
 {
 	return height() - height_without_menu_items;
 }

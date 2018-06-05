@@ -3,54 +3,54 @@
 
 
 file::file(const std::string& name, file_type type, std::size_t size)
-	: name(name), type(type), size(size) 
+	: m_name(name), m_type(type), m_size(size) 
 {
 }
 
 file file::rename(const std::string& new_name) &&
 {
 	file tmp(std::forward<file>(*this));
-	tmp.name = new_name;
+	tmp.m_name = new_name;
 	return tmp;
 }
 
 file file::rename(const std::string& new_name) const &
 {
-	return file(new_name, type, size); 
+	return file(new_name, m_type, m_size); 
 }
 
-const std::string& file::get_name() const
+const std::string& file::name() const
 {
-	return name;
+	return m_name;
 }
 
-file_type file::get_type() const
+file_type file::type() const
 {
-	return type;
+	return m_type;
 }
 
-std::size_t file::get_size() const
+std::size_t file::size() const
 {
-	return size;
+	return m_size;
 }
 
-const std::string file::get_info() const
+const std::string file::info() const
 {
-	if (type != DIRECTORY && type != REGULAR)
+	if (m_type != DIRECTORY && m_type != REGULAR)
 		return "Unknown";
 
 	std::ostringstream info;
-	info << name << " " << type << " " << size;
+	info << m_name << " " << m_type << " " << m_size;
 	return info.str();
 }
 
 
 bool file::is_dir() const
 {
-	return type == DIRECTORY;
+	return m_type == DIRECTORY;
 }
 
 bool file::is_regular() const
 {
-	return type == REGULAR;
+	return m_type == REGULAR;
 }

@@ -20,13 +20,13 @@ static ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Co
 
 static std::size_t binary_search(const std::string& name, immer::flex_vector<file> v)
 {
-	auto it = binary_find(v.begin(), v.end(), file(name), [](auto&& arg1, auto&& arg2) { return arg1.get_name() < arg2.get_name(); });
+	auto it = binary_find(v.begin(), v.end(), file(name), [](auto&& arg1, auto&& arg2) { return arg1.name() < arg2.name(); });
     return std::distance(v.begin(), it);
 }
 
 static std::size_t binary_lower(const std::string& name, immer::flex_vector<file> v)
 {
-	auto it = std::lower_bound(v.begin(), v.end(), file(name), [](auto&& arg1, auto&& arg2) { return arg1.get_name() < arg2.get_name(); });
+	auto it = std::lower_bound(v.begin(), v.end(), file(name), [](auto&& arg1, auto&& arg2) { return arg1.name() < arg2.name(); });
     return std::distance(v.begin(), it);
 }
 
@@ -66,7 +66,7 @@ current_dir::current_dir(const std::string& dir_path, bool error_flag)
 						| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_regular_file(entry.path()); })
 						| ranges::v3::view::transform([](const fs::path& path) { return file(path.filename(), REGULAR, fs::file_size(path)); })
 						| ranges::v3::to_vector
-						| ranges::v3::action::sort([](const file& a, const file& b) { return a.get_name() < b.get_name(); });
+						| ranges::v3::action::sort([](const file& a, const file& b) { return a.name() < b.name(); });
 
 			data.regular_files = immer::flex_vector<file>{regular_files.begin(), regular_files.end()};
 
@@ -75,14 +75,14 @@ current_dir::current_dir(const std::string& dir_path, bool error_flag)
 						| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_directory(entry.path()); })
 						| ranges::v3::view::transform([](const fs::path& path) { return file(path.filename(), DIRECTORY, std::distance(fs::directory_iterator(path), fs::directory_iterator{})); })
 						| ranges::v3::to_vector
-						| ranges::v3::action::sort([](const file& a, const file& b) { return a.get_name() < b.get_name(); });
+						| ranges::v3::action::sort([](const file& a, const file& b) { return a.name() < b.name(); });
 
 			data.dirs = immer::flex_vector<file>{dirs.begin(), dirs.end()};
 
 			m_data = std::move(data);
 		}
 		catch(...) {
-			m_data = std::string("an error occured");
+			m_data = std::string("an error occurred");
 		}
 	}
 }
@@ -113,12 +113,12 @@ current_dir current_dir::rename(const file& f, const std::string& new_file_name)
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
 					// if the file name already exists return an error dir
-					if (get_file_index(new_file_name) != get_num_of_files())
+					if (file_index(new_file_name) != num_of_files())
 						return current_dir("file name already exists", true);
 
 					if (f.is_dir()) {
 						// rename a dir
-						auto index = get_dir_index(f.get_name());
+						auto index = dir_index(f.name());
 
 						if (index != data.dirs.size()) {
 							auto new_data = data.dirs.erase(index);
@@ -129,7 +129,7 @@ current_dir current_dir::rename(const file& f, const std::string& new_file_name)
 					}
 					else if (f.is_regular()) {
 						// rename a regular file
-						auto index = get_regular_file_index(f.get_name());
+						auto index = regular_file_index(f.name());
 
 						if (index != data.regular_files.size()) {
 							auto new_data = data.regular_files.erase(index);
@@ -157,13 +157,13 @@ current_dir current_dir::insert_file(const file& f) const
 			[&](const current_dir::data& data) {
 				if (f.is_dir()) {
 					// insert a dir
-					auto place_to_insert = binary_lower(f.get_name(), data.dirs);
+					auto place_to_insert = binary_lower(f.name(), data.dirs);
 
-					if (place_to_insert < get_num_of_dirs() && data.dirs[place_to_insert].get_name() == f.get_name()) {
+					if (place_to_insert < num_of_dirs() && data.dirs[place_to_insert].name() == f.name()) {
 						// dir with the same name
 						return current_dir("dir with the same name", true);
 					}
-					else if (get_regular_file_index(f.get_name()) != get_num_of_regular_files()) {
+					else if (regular_file_index(f.name()) != num_of_regular_files()) {
 						// regular file with the same name
 						return current_dir("regular file with the same name", true);
 					}
@@ -173,13 +173,13 @@ current_dir current_dir::insert_file(const file& f) const
 				}
 				else if (f.is_regular()) {
 					// insert a regular file
-					auto place_to_insert = binary_lower(f.get_name(), data.regular_files);
+					auto place_to_insert = binary_lower(f.name(), data.regular_files);
 
-					if (place_to_insert < get_num_of_regular_files() && data.regular_files[place_to_insert].get_name() == f.get_name()) {
+					if (place_to_insert < num_of_regular_files() && data.regular_files[place_to_insert].name() == f.name()) {
 						// regular file with the same name
 						return current_dir("regular file with the same name", true);
 					}
-					else if (get_dir_index(f.get_name()) != get_num_of_dirs()) {
+					else if (dir_index(f.name()) != num_of_dirs()) {
 						// dir with the same name
 						return current_dir("dir with the same name", true);
 					}
@@ -204,9 +204,9 @@ current_dir current_dir::delete_file(const file& f) const
 			[&](const current_dir::data& data) {
 				if (f.is_dir()) {
 					// delete a dir
-					auto index_of_file = get_dir_index(f.get_name());
+					auto index_of_file = dir_index(f.name());
 
-					if (index_of_file == get_num_of_dirs()) {
+					if (index_of_file == num_of_dirs()) {
 						// dir doesn't exist
 						return current_dir("dir doesn't exist", true);
 					}
@@ -215,9 +215,9 @@ current_dir current_dir::delete_file(const file& f) const
 				}
 				else if (f.is_regular()) {
 					// delete a regular file
-					auto index_of_file = get_regular_file_index(f.get_name());
+					auto index_of_file = regular_file_index(f.name());
 
-					if (index_of_file == get_num_of_regular_files()) {
+					if (index_of_file == num_of_regular_files()) {
 						// regular file doesn't exist
 						return current_dir("regular file doesn't exist", true);
 					}
@@ -235,26 +235,26 @@ current_dir current_dir::delete_file(const file& f) const
     }, m_data);
 }
 
-std::size_t current_dir::get_file_index(const std::string &file_name) const
+std::size_t current_dir::file_index(const std::string &file_name) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
 				unused(data);
 
 				// try to find a file in regular files
-				auto index_of_file = get_regular_file_index(file_name);
+				auto index_of_file = regular_file_index(file_name);
 
-				if (index_of_file != get_num_of_regular_files())
-					return get_num_of_dirs() + index_of_file;
+				if (index_of_file != num_of_regular_files())
+					return num_of_dirs() + index_of_file;
 
 				// try to find a file in dirs
-				index_of_file = get_dir_index(file_name);
+				index_of_file = dir_index(file_name);
 
-				if (index_of_file != get_num_of_dirs())
+				if (index_of_file != num_of_dirs())
 					return index_of_file;
 
 				// file not found
-				return get_num_of_files();
+				return num_of_files();
 			},
 			[](const std::string& e) {
 				unused(e);
@@ -263,7 +263,7 @@ std::size_t current_dir::get_file_index(const std::string &file_name) const
     }, m_data);
 }
 
-std::size_t current_dir::get_regular_file_index(const std::string& file_name) const
+std::size_t current_dir::regular_file_index(const std::string& file_name) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
@@ -276,7 +276,7 @@ std::size_t current_dir::get_regular_file_index(const std::string& file_name) co
     }, m_data);
 }
 
-std::size_t current_dir::get_dir_index(const std::string& file_name) const
+std::size_t current_dir::dir_index(const std::string& file_name) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
@@ -289,7 +289,7 @@ std::size_t current_dir::get_dir_index(const std::string& file_name) const
     }, m_data);
 }
 
-std::size_t current_dir::get_num_of_regular_files() const
+std::size_t current_dir::num_of_regular_files() const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
@@ -302,7 +302,7 @@ std::size_t current_dir::get_num_of_regular_files() const
     }, m_data);
 }
 
-std::size_t current_dir::get_num_of_dirs() const
+std::size_t current_dir::num_of_dirs() const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
@@ -315,9 +315,9 @@ std::size_t current_dir::get_num_of_dirs() const
     }, m_data);
 }
 
-std::size_t current_dir::get_num_of_files() const
+std::size_t current_dir::num_of_files() const
 {
-	return get_num_of_dirs() + get_num_of_regular_files();
+	return num_of_dirs() + num_of_regular_files();
 }
 
 std::optional<std::reference_wrapper<const fs::path>> current_dir::get_path() const
@@ -333,11 +333,11 @@ std::optional<std::reference_wrapper<const fs::path>> current_dir::get_path() co
     }, m_data);
 }
 
-std::optional<std::reference_wrapper<const file>> current_dir::get_file_by_index(unsigned i) const
+std::optional<std::reference_wrapper<const file>> current_dir::file_by_index(unsigned i) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
-				if (i < get_num_of_dirs())
+				if (i < num_of_dirs())
 					return std::optional<std::reference_wrapper<const file>>{data.dirs[i]};
 				
 				return std::optional<std::reference_wrapper<const file>>{data.regular_files[i-data.dirs.size()]};
@@ -349,7 +349,7 @@ std::optional<std::reference_wrapper<const file>> current_dir::get_file_by_index
     }, m_data);
 }
 
-std::optional<std::reference_wrapper<const file>> current_dir::get_regular_file_by_index(unsigned i) const
+std::optional<std::reference_wrapper<const file>> current_dir::regular_file_by_index(unsigned i) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
@@ -362,7 +362,7 @@ std::optional<std::reference_wrapper<const file>> current_dir::get_regular_file_
     }, m_data);
 }
 
-std::optional<std::reference_wrapper<const file>> current_dir::get_dir_by_index(unsigned i) const
+std::optional<std::reference_wrapper<const file>> current_dir::dir_by_index(unsigned i) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {

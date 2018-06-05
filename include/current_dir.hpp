@@ -29,23 +29,23 @@ public:
 
 	std::optional<std::reference_wrapper<const fs::path>> get_path() const;
 
-	std::size_t get_num_of_files() const;
-	std::size_t get_num_of_regular_files() const;
-	std::size_t get_num_of_dirs() const;
+	std::size_t num_of_files() const;
+	std::size_t num_of_regular_files() const;
+	std::size_t num_of_dirs() const;
 
 	// get a file from an imaginary vector dirs+regular_files
-	std::optional<std::reference_wrapper<const file>> get_file_by_index(unsigned i) const;
+	std::optional<std::reference_wrapper<const file>> file_by_index(unsigned i) const;
 	// get a file from regular_files
-	std::optional<std::reference_wrapper<const file>> get_regular_file_by_index(unsigned i) const;
+	std::optional<std::reference_wrapper<const file>> regular_file_by_index(unsigned i) const;
 	// get a file from dirs
-	std::optional<std::reference_wrapper<const file>> get_dir_by_index(unsigned i) const;
+	std::optional<std::reference_wrapper<const file>> dir_by_index(unsigned i) const;
 
 	// get an index from an imaginary vector dirs+regular_files
-	std::size_t get_file_index(const std::string& file_name) const;
+	std::size_t file_index(const std::string& file_name) const;
 	// get an index from regular_files
-	std::size_t get_regular_file_index(const std::string& file_name) const;
+	std::size_t regular_file_index(const std::string& file_name) const;
 	// get an index from dirs
-	std::size_t get_dir_index(const std::string& file_name) const;
+	std::size_t dir_index(const std::string& file_name) const;
 
 	current_dir cd(const fs::path& dir_path) const;
 	current_dir rename(const file& f, const std::string& new_file_name) const;

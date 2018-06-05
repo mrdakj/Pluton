@@ -31,5 +31,5 @@ void fm_finfo::set_file(const file& f)
 		}
 	};
 
-	set_file(f.get_name(), str_file_type(f.get_type()), std::to_string(f.get_size()));
+	set_file(f.name(), str_file_type(f.type()), std::to_string(f.size()));
 }

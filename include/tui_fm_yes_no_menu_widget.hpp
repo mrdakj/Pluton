@@ -16,12 +16,12 @@ class fm_yes_no_menu_widget : public Vertical_layout {
 	void grab_focus();
 
 
-	Blank_height& blank_before_question{this->make_child<Blank_height>(1)};
-	Label& question{this->make_child<Label>()};
-	Blank_height& blank_after_question_first{this->make_child<Blank_height>(1)};
-	Blank_height& blank_after_question_second{this->make_child<Blank_height>(1)};
+	Blank_height& blank_before_question{make_child<Blank_height>(1)};
+	Label& question{make_child<Label>()};
+	Blank_height& blank_after_question_first{make_child<Blank_height>(1)};
+	Blank_height& blank_after_question_second{make_child<Blank_height>(1)};
 
-	fm_menu& options_menu{this->make_child<fm_menu>()};
+	fm_menu& options_menu{make_child<fm_menu>()};
 
 };
 

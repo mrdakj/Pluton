@@ -10,17 +10,17 @@ using namespace cppurses;
 class fm_finfo : public Vertical_layout {
 
 
-	Label& title{this->make_child<Label>("Info")};
-	Blank_height& title_blank{this->make_child<Blank_height>(1)};
+	Label& title{make_child<Label>("Info")};
+	Blank_height& title_blank{make_child<Blank_height>(1)};
 
-	Label& file_name{this->make_child<Label>()};
-	Blank_height& blank_after_name{this->make_child<Blank_height>(1)};
+	Label& file_name{make_child<Label>()};
+	Blank_height& blank_after_name{make_child<Blank_height>(1)};
 
-	Label& file_type{this->make_child<Label>()};
-	Blank_height& blank_after_type{this->make_child<Blank_height>(1)};
+	Label& file_type{make_child<Label>()};
+	Blank_height& blank_after_type{make_child<Blank_height>(1)};
 
-	Label& file_size{this->make_child<Label>()};
-	Blank_height& blank_after_size{this->make_child<Blank_height>(1)};
+	Label& file_size{make_child<Label>()};
+	Blank_height& blank_after_size{make_child<Blank_height>(1)};
 
 
 public:

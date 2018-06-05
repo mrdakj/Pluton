@@ -36,7 +36,7 @@ public:
 	fm_menu();
 
 	// get selected_index_
-	std::size_t get_selected_index() const;
+	std::size_t selected_index() const;
 	// set selected_index_
 	void change_selected(std::size_t index);
 	void select_item(std::size_t index);
@@ -46,9 +46,9 @@ public:
     void select_down(std::size_t n = 1);
     void set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>>> &items);
     void call_current_item() const;
-    virtual std::size_t get_menu_height() const;
+    virtual std::size_t menu_height() const;
     std::size_t size() const;
-	Glyph_string get_selected_item_name() const;
+	Glyph_string selected_item_name() const;
 
 protected:
     bool paint_event() override;

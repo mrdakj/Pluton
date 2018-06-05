@@ -126,7 +126,7 @@ std::size_t fm_menu::size() const
 }
 
 
-std::size_t fm_menu::get_selected_index() const
+std::size_t fm_menu::selected_index() const
 {
 	return selected_index_;
 }
@@ -136,7 +136,7 @@ void fm_menu::change_selected(std::size_t index)
 	selected_index_ = index;
 }
 
-Glyph_string fm_menu::get_selected_item_name() const
+Glyph_string fm_menu::selected_item_name() const
 {
 	Push_button & tmpbut = items_[selected_index_].button;
 	return tmpbut.contents();
@@ -219,7 +219,7 @@ void fm_menu::call_current_item() const
 }
 
 
-std::size_t fm_menu::get_menu_height() const
+std::size_t fm_menu::menu_height() const
 {
 	return height();
 }
