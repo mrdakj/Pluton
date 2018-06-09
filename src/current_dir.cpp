@@ -322,15 +322,15 @@ std::size_t current_dir::num_of_files() const
 	return num_of_dirs() + num_of_regular_files();
 }
 
-std::optional<std::reference_wrapper<const fs::path>> current_dir::path() const
+optional_ref<const fs::path> current_dir::path() const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
-				return std::optional<std::reference_wrapper<const fs::path>>{data.dir_path};
+				return optional_ref<const fs::path>{data.dir_path};
 			},
 			[](const std::string& e) {
 				unused(e);
-				return (std::optional<std::reference_wrapper<const fs::path>>)std::nullopt;
+				return optional_ref<const fs::path>();
 			}
 	}, m_data);
 }

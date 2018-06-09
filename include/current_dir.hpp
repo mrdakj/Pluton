@@ -26,7 +26,7 @@ class current_dir {
 	public:
 		current_dir(const std::string& dir_path, bool error_flag = false);
 
-		std::optional<std::reference_wrapper<const fs::path>> path() const;
+		optional_ref<const fs::path> path() const;
 
 		std::size_t num_of_files() const;
 		std::size_t num_of_regular_files() const;

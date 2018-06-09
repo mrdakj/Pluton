@@ -62,7 +62,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 				auto new_dir = fm.curdir.delete_file(file);
 
 				if (!new_dir.is_error_dir()) {
-					sys::remove_from_system(fm.curdir.path()->get() / file.name());
+					sys::remove_from_system(fm.curdir.path().get() / file.name());
 					fm.set_directory(new_dir, true, fm.offset);
 					fm.flisting.select_item(new_index);
 				}
@@ -71,7 +71,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 				if (fm.offset == 0) {
 					auto new_dir = fm.curdir.delete_file(file);
 					if (!new_dir.is_error_dir()) {
-						sys::remove_from_system(fm.curdir.path()->get() / file.name());
+						sys::remove_from_system(fm.curdir.path().get() / file.name());
 						fm.set_directory(fm.curdir.delete_file(file), true, fm.offset);
 						fm.flisting.select_item(0);
 					}
@@ -79,7 +79,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 				else {
 					auto new_dir = fm.curdir.delete_file(file);
 					if (!new_dir.is_error_dir()) {
-						sys::remove_from_system(fm.curdir.path()->get() / file.name());
+						sys::remove_from_system(fm.curdir.path().get() / file.name());
 						fm.set_directory(fm.curdir.delete_file(file), true, fm.offset-1);
 						fm.flisting.select_item(fm.flisting.size()-1);
 					}
@@ -131,7 +131,7 @@ sig::Slot<void()> insert_rfile(file_manager_tui& fm)
 			auto new_dir = fm.curdir.insert_file(file(text_new_name, REGULAR));
 
 			if (!new_dir.is_error_dir()) {
-				sys::insert_rfile_on_system(fm.curdir.path()->get() / text_new_name);
+				sys::insert_rfile_on_system(fm.curdir.path().get() / text_new_name);
 
 				int index = new_dir.file_index(text_new_name);
 				auto height = fm.flisting.menu_height();
@@ -197,7 +197,7 @@ sig::Slot<void()> insert_dir(file_manager_tui& fm)
 			auto new_dir = fm.curdir.insert_file(file(text_new_name, DIRECTORY));
 
 			if (!new_dir.is_error_dir()) {
-				sys::insert_dir_on_system(fm.curdir.path()->get() / text_new_name);
+				sys::insert_dir_on_system(fm.curdir.path().get() / text_new_name);
 				int index = new_dir.file_index(text_new_name);
 				auto height = fm.flisting.menu_height();
 
@@ -274,7 +274,7 @@ sig::Slot<void()> rename_selected(file_manager_tui& fm)
 			auto new_dir = fm.curdir.rename(selected_file, text_new_name);
 
 			if (!new_dir.is_error_dir()) {
-				sys::rename_on_system(fm.curdir.path()->get() / selected_file.name(), fm.curdir.path()->get() / text_new_name); // important to be before set_directory so one can cd into renamed dir
+				sys::rename_on_system(fm.curdir.path().get() / selected_file.name(), fm.curdir.path().get() / text_new_name); // important to be before set_directory so one can cd into renamed dir
 				int index = new_dir.file_index(text_new_name);
 				auto height = fm.flisting.menu_height();
 
@@ -326,7 +326,7 @@ sig::Slot<void()> open_terminal(file_manager_tui& fm)
 
 		/* if (std::getline(output, line)) { */
 		std::stringstream ss;
-		ss << "termite" << " -d " << fm.curdir.path()->get() << " 2> /dev/null&";
+		ss << "termite" << " -d " << fm.curdir.path().get() << " 2> /dev/null&";
 
 		std::system(ss.str().c_str());
 		/* } */
@@ -402,7 +402,7 @@ sig::Slot<void()> exec_command(file_manager_tui& fm)
 
 			auto selected_file = fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index()).get();
 			std::string file_name = selected_file.name();
-			fs::path file_path = fm.curdir.path()->get() / file_name;
+			fs::path file_path = fm.curdir.path().get() / file_name;
 			std::stringstream ss1;
 
 			ss1 <<"cat /usr/share/applications/"<<command<<".desktop 2> /dev/null | grep Terminal>result_pluton";
@@ -480,8 +480,8 @@ void file_manager_tui::set_items()
 	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > menu_items;
 	for (std::size_t i = l; i < r ; i++) {
 		file f = curdir.file_by_index(i).get();
-		if (f.type() == 'd' && fs::exists(curdir.path()->get() / f.name())) {
-			menu_items.emplace_back(std::make_tuple(f.name(), chdir(*this, curdir.path()->get() / f.name())));
+		if (f.type() == 'd' && fs::exists(curdir.path().get() / f.name())) {
+			menu_items.emplace_back(std::make_tuple(f.name(), chdir(*this, curdir.path().get() / f.name())));
 		} else {
 			menu_items.emplace_back(std::make_tuple(f.name(), opt::none));
 		}
@@ -598,7 +598,7 @@ file_manager_tui::file_manager_tui(current_dir& curdir)
 
 void file_manager_tui::update_history(const current_dir& new_curdir)
 {
-	if (dirs_history.empty() || dirs_history.back().path()->get() != new_curdir.path()->get()) {
+	if (dirs_history.empty() || dirs_history.back().path().get() != new_curdir.path().get()) {
 		dirs_history.push_back(curdir);
 		history_index++;
 	}
@@ -630,7 +630,7 @@ void file_manager_tui::set_directory(const current_dir& new_curdir, bool save_pr
 	set_info();
 	set_items();
 
-	curdir_path_label.set_text("  Dir: " + curdir.path()->get().string());
+	curdir_path_label.set_text("  Dir: " + curdir.path().get().string());
 
 	flisting.select_item(0);
 
@@ -641,12 +641,12 @@ void file_manager_tui::connect_slots()
 {
 	flisting.selected_file_changed.connect(change_file(*this));	
 
-	if (fs::exists(curdir.path()->get().parent_path())) {
+	if (fs::exists(curdir.path().get().parent_path())) {
 		flisting.h_pressed.disconnect_all_slots();
-		flisting.h_pressed.connect(chdir(*this, fs::absolute(curdir.path()->get().parent_path())));
+		flisting.h_pressed.connect(chdir(*this, fs::absolute(curdir.path().get().parent_path())));
 
 		flisting.backspace_pressed.disconnect_all_slots();
-		flisting.backspace_pressed.connect(chdir(*this, fs::absolute(curdir.path()->get().parent_path())));
+		flisting.backspace_pressed.connect(chdir(*this, fs::absolute(curdir.path().get().parent_path())));
 	}
 
 	flisting.esc_pressed.disconnect_all_slots();
