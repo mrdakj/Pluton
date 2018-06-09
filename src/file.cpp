@@ -1,6 +1,9 @@
 #include "file.hpp"
 #include <sstream>
 
+file::file()
+	: m_type(UNKNOWN)
+{}
 
 file::file(const std::string& name, file_type type, std::size_t size)
 	: m_name(name), m_type(type), m_size(size) 

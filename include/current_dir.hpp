@@ -3,6 +3,7 @@
 
 #include <immer/flex_vector.hpp>
 #include <experimental/filesystem>
+#include "optional_ref.hpp"
 #include "file.hpp"
 #include <variant>
 #include <optional>
@@ -32,11 +33,11 @@ class current_dir {
 		std::size_t num_of_dirs() const;
 
 		// get a file from an imaginary vector dirs+regular_files
-		std::optional<std::reference_wrapper<const file>> file_by_index(unsigned i) const;
+		optional_ref<const file> file_by_index(unsigned i) const;
 		// get a file from regular_files
-		std::optional<std::reference_wrapper<const file>> regular_file_by_index(unsigned i) const;
+		optional_ref<const file> regular_file_by_index(unsigned i) const;
 		// get a file from dirs
-		std::optional<std::reference_wrapper<const file>> dir_by_index(unsigned i) const;
+		optional_ref<const file> dir_by_index(unsigned i) const;
 
 		// get an index from an imaginary vector dirs+regular_files
 		std::size_t file_index(const std::string& file_name) const;

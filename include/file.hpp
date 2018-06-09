@@ -3,7 +3,7 @@
 
 #include <string>
 
-enum file_type { REGULAR = 'r', DIRECTORY = 'd' };
+enum file_type { REGULAR = 'r', DIRECTORY = 'd', UNKNOWN = 'u' };
 
 class file {
 	private:
@@ -12,6 +12,7 @@ class file {
 		std::size_t m_size;
 
 	public:
+		file();
 		file(const std::string& name, file_type type = REGULAR, std::size_t size = 0);
 
 		file rename(const std::string& new_name) &&;

@@ -53,7 +53,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 
 		std::size_t index = fm.flisting.selected_index();
 		int new_index = index-1;
-		auto file = fm.curdir.file_by_index(fm.offset + index)->get();
+		auto file = fm.curdir.file_by_index(fm.offset + index).get();
 		std::string file_name = file.name();
 
 		// Yes slot
@@ -241,7 +241,7 @@ sig::Slot<void()> change_file(file_manager_tui& fm)
 {
 	sig::Slot<void()> slot{[&fm] 
 		{
-			fm.file_info.set_file(fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index())->get());
+			fm.file_info.set_file(fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index()).get());
 		}};
 
 	slot.track(fm.flisting.destroyed);
@@ -255,7 +255,7 @@ sig::Slot<void()> rename_selected(file_manager_tui& fm)
 		if (fm.flisting.size() == 0)
 			return;
 
-		auto selected_file = fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index())->get();
+		auto selected_file = fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index()).get();
 		std::string file_name = selected_file.name();
 
 		fm.insert_widget.change_title("Rename file " + file_name);
@@ -400,7 +400,7 @@ sig::Slot<void()> exec_command(file_manager_tui& fm)
 
 		sig::Slot<void(const std::string&)> insert_rfile_slot{[&fm] (const std::string& command) {
 
-			auto selected_file = fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index())->get();
+			auto selected_file = fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index()).get();
 			std::string file_name = selected_file.name();
 			fs::path file_path = fm.curdir.path()->get() / file_name;
 			std::stringstream ss1;
@@ -479,7 +479,7 @@ void file_manager_tui::set_items()
 
 	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > menu_items;
 	for (std::size_t i = l; i < r ; i++) {
-		file f = curdir.file_by_index(i)->get();
+		file f = curdir.file_by_index(i).get();
 		if (f.type() == 'd' && fs::exists(curdir.path()->get() / f.name())) {
 			menu_items.emplace_back(std::make_tuple(f.name(), chdir(*this, curdir.path()->get() / f.name())));
 		} else {
@@ -610,9 +610,9 @@ void file_manager_tui::update_history(const current_dir& new_curdir)
 void file_manager_tui::set_info()
 {
 	if (curdir.num_of_dirs() > 0) 
-		file_info.set_file(curdir.dir_by_index(0)->get());
+		file_info.set_file(curdir.dir_by_index(0).get());
 	else if (curdir.num_of_regular_files() > 0) 
-		file_info.set_file(curdir.regular_file_by_index(0)->get());
+		file_info.set_file(curdir.regular_file_by_index(0).get());
 	else 
 		file_info.set_file("Empty directory", "", "");
 }

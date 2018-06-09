@@ -61,6 +61,8 @@ current_dir::current_dir(const std::string& dir_path, bool error_flag)
 			current_dir::data data;
 			data.dir_path = dir_path;
 
+			// TODO cannot convert to flex_vector
+
 			fs::directory_iterator ls { dir_path };
 			auto regular_files = ls 
 				| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_regular_file(entry.path()); })
@@ -333,44 +335,44 @@ std::optional<std::reference_wrapper<const fs::path>> current_dir::path() const
 	}, m_data);
 }
 
-std::optional<std::reference_wrapper<const file>> current_dir::file_by_index(unsigned i) const
+optional_ref<const file> current_dir::file_by_index(unsigned i) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
 				if (i < num_of_dirs())
-					return std::optional<std::reference_wrapper<const file>>{data.dirs[i]};
+					return optional_ref<const file>{data.dirs[i]};
 
-				return std::optional<std::reference_wrapper<const file>>{data.regular_files[i-data.dirs.size()]};
+				return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
 			},
 			[](const std::string& e) {
 				unused(e);
-				return (std::optional<std::reference_wrapper<const file>>)std::nullopt;
+				return optional_ref<const file>();
 			}
 	}, m_data);
 }
 
-std::optional<std::reference_wrapper<const file>> current_dir::regular_file_by_index(unsigned i) const
+optional_ref<const file> current_dir::regular_file_by_index(unsigned i) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
-				return std::optional<std::reference_wrapper<const file>>{data.regular_files[i]};
+				return optional_ref<const file>{data.regular_files[i]};
 			},
 			[](const std::string& e) {
 				unused(e);
-				return (std::optional<std::reference_wrapper<const file>>)std::nullopt;
+				return optional_ref<const file>();
 			}
 	}, m_data);
 }
 
-std::optional<std::reference_wrapper<const file>> current_dir::dir_by_index(unsigned i) const
+optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 {
 	return std::visit(overloaded {
 			[&](const current_dir::data& data) {
-				return std::optional<std::reference_wrapper<const file>>{data.dirs[i]};
+				return optional_ref<const file>{data.dirs[i]};
 			},
 			[](const std::string& e) {
 				unused(e);
-				return (std::optional<std::reference_wrapper<const file>>)std::nullopt;
+				return optional_ref<const file>();
 			}
 	}, m_data);
 }
