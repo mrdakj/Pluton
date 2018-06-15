@@ -22,6 +22,7 @@ class current_dir {
 
 		std::variant<data, std::string> m_data;
 
+		current_dir() {}
 		current_dir(const std::string& dir_path, immer::flex_vector<file> dirs, immer::flex_vector<file> regular_files);
 	public:
 		current_dir(const std::string& dir_path, bool error_flag = false);
@@ -52,6 +53,8 @@ class current_dir {
 		current_dir delete_file(const file& f) const;
 
 		bool is_error_dir() const;
+
+		template <class V, class F> friend auto fmap(V&& var, F&& f);
 };
 
 #endif /* CURRENT_DIR_HPP */

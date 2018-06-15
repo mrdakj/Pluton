@@ -11,6 +11,48 @@
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
+template <class V, class F>
+auto fmap(V&& var, F&& f)
+{
+	decltype(std::invoke(f, current_dir::data())) t;
+	return std::visit(overloaded {
+			[&](const current_dir::data& data) {
+				return std::variant<decltype(t), std::string>(f(data));
+			},
+			[](const std::string& e) {
+				return std::variant<decltype(t), std::string>(e);
+			}
+	}, var);
+}
+
+template <class T>
+auto visit(auto&& var)
+{
+	return std::visit(overloaded {
+			[](const T& result) {
+				return result;
+			},
+			[](const std::string& e) {
+				unused(e);
+				return T{};
+			}
+	}, var);
+}
+
+template <class T, class... Args>
+auto visit(auto&& var, Args... args)
+{
+	return std::visit(overloaded {
+			[](const T& result) {
+				return result;
+			},
+			[&](const std::string& e) {
+				unused(e);
+				return T{args...};
+			}
+	}, var);
+}
+
 template<class ForwardIt, class T, class Compare=std::less<>>
 static ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})
 {
@@ -112,209 +154,165 @@ current_dir current_dir::cd(const fs::path& dir_path) const
 
 current_dir current_dir::rename(const file& f, const std::string& new_file_name) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				// if the file name already exists return an error dir
-				if (file_index(new_file_name) != num_of_files())
-					return current_dir("file name already exists", true);
+	auto f1 = [&](const current_dir::data& data) {
+			// if the file name already exists return an error dir
+			if (file_index(new_file_name) != num_of_files())
+				return current_dir("file name already exists", true);
 
-				if (f.is_dir()) {
-					// rename a dir
-					auto index = dir_index(f.name());
+			if (f.is_dir()) {
+				// rename a dir
+				auto index = dir_index(f.name());
 
-					if (index != data.dirs.size()) {
-						auto new_data = data.dirs.erase(index);
-						auto new_place = binary_lower(new_file_name, new_data);
-						new_data = std::move(new_data).insert(new_place, data.dirs[index].rename(new_file_name));
-						return current_dir(data.dir_path, std::move(new_data), data.regular_files);
-					}
+				if (index != data.dirs.size()) {
+					auto new_data = data.dirs.erase(index);
+					auto new_place = binary_lower(new_file_name, new_data);
+					new_data = std::move(new_data).insert(new_place, data.dirs[index].rename(new_file_name));
+					return current_dir(data.dir_path, std::move(new_data), data.regular_files);
 				}
-				else if (f.is_regular()) {
-					// rename a regular file
-					auto index = regular_file_index(f.name());
-
-					if (index != data.regular_files.size()) {
-						auto new_data = data.regular_files.erase(index);
-						auto new_place = binary_lower(new_file_name, new_data);
-						new_data = std::move(new_data).insert(new_place, data.regular_files[index].rename(new_file_name));
-
-						return current_dir(data.dir_path, data.dirs, std::move(new_data));
-					}
-				}
-
-				// not a dir and not a regular file
-				return current_dir("not a dir and not a regular file", true);
-			},
-			[](const std::string& e) {
-				unused(e);
-				return current_dir("operation on error dir", true);
 			}
-	}, m_data);
+			else if (f.is_regular()) {
+				// rename a regular file
+				auto index = regular_file_index(f.name());
+
+				if (index != data.regular_files.size()) {
+					auto new_data = data.regular_files.erase(index);
+					auto new_place = binary_lower(new_file_name, new_data);
+					new_data = std::move(new_data).insert(new_place, data.regular_files[index].rename(new_file_name));
+
+					return current_dir(data.dir_path, data.dirs, std::move(new_data));
+				}
+			}
+
+			// not dir and not a regular file
+			return current_dir("not a dir and not a regular file", true);
+	};
+
+	return visit<current_dir, std::string, bool>(fmap(m_data, f1), "operation on error dir", true);
 }
 
 
 current_dir current_dir::insert_file(const file& f) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				if (f.is_dir()) {
-					// insert a dir
-					auto place_to_insert = binary_lower(f.name(), data.dirs);
+	auto f1 = [&](const current_dir::data& data) {
+			if (f.is_dir()) {
+				// insert a dir
+				auto place_to_insert = binary_lower(f.name(), data.dirs);
 
-					if (place_to_insert < num_of_dirs() && data.dirs[place_to_insert].name() == f.name()) {
-						// dir with the same name
-						return current_dir("dir with the same name", true);
-					}
-					else if (regular_file_index(f.name()) != num_of_regular_files()) {
-						// regular file with the same name
-						return current_dir("regular file with the same name", true);
-					}
-
-					auto new_data = data.dirs.insert(place_to_insert, f);
-					return current_dir(data.dir_path, std::move(new_data), data.regular_files);
+				if (place_to_insert < num_of_dirs() && data.dirs[place_to_insert].name() == f.name()) {
+					// dir with the same name
+					return current_dir("dir with the same name", true);
 				}
-				else if (f.is_regular()) {
-					// insert a regular file
-					auto place_to_insert = binary_lower(f.name(), data.regular_files);
-
-					if (place_to_insert < num_of_regular_files() && data.regular_files[place_to_insert].name() == f.name()) {
-						// regular file with the same name
-						return current_dir("regular file with the same name", true);
-					}
-					else if (dir_index(f.name()) != num_of_dirs()) {
-						// dir with the same name
-						return current_dir("dir with the same name", true);
-					}
-
-					auto new_data = data.regular_files.insert(place_to_insert, f);
-					return current_dir(data.dir_path, data.dirs, std::move(new_data));
+				else if (regular_file_index(f.name()) != num_of_regular_files()) {
+					// regular file with the same name
+					return current_dir("regular file with the same name", true);
 				}
 
-				// not a dir and not a regular file
-				return current_dir("not a dir and not a regular file", true);
-			},
-			[](const std::string& e) {
-				unused(e);
-				return current_dir("operation on error dir", true);
+				auto new_data = data.dirs.insert(place_to_insert, f);
+				return current_dir(data.dir_path, std::move(new_data), data.regular_files);
 			}
-	}, m_data);
+			else if (f.is_regular()) {
+				// insert a regular file
+				auto place_to_insert = binary_lower(f.name(), data.regular_files);
+
+				if (place_to_insert < num_of_regular_files() && data.regular_files[place_to_insert].name() == f.name()) {
+					// regular file with the same name
+					return current_dir("regular file with the same name", true);
+				}
+				else if (dir_index(f.name()) != num_of_dirs()) {
+					// dir with the same name
+					return current_dir("dir with the same name", true);
+				}
+
+				auto new_data = data.regular_files.insert(place_to_insert, f);
+				return current_dir(data.dir_path, data.dirs, std::move(new_data));
+			}
+
+			// not a dir and not a regular file
+			return current_dir("not a dir and not a regular file", true);
+	};
+
+	return visit<current_dir, std::string, bool>(fmap(m_data, f1), "operation on error dir", true);
 }
 
 current_dir current_dir::delete_file(const file& f) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				if (f.is_dir()) {
-					// delete a dir
-					auto index_of_file = dir_index(f.name());
+	auto f1 = [&](const current_dir::data& data) {
+			if (f.is_dir()) {
+				// delete a dir
+				auto index_of_file = dir_index(f.name());
 
-					if (index_of_file == num_of_dirs()) {
-						// dir doesn't exist
-						return current_dir("dir doesn't exist", true);
-					}
-
-					return current_dir(data.dir_path, data.dirs.erase(index_of_file), data.regular_files);
-				}
-				else if (f.is_regular()) {
-					// delete a regular file
-					auto index_of_file = regular_file_index(f.name());
-
-					if (index_of_file == num_of_regular_files()) {
-					// regular file doesn't exist
-					return current_dir("regular file doesn't exist", true);
-					}
-
-					return current_dir(data.dir_path, data.dirs, data.regular_files.erase(index_of_file));
+				if (index_of_file == num_of_dirs()) {
+					// dir doesn't exist
+					return current_dir("dir doesn't exist", true);
 				}
 
-				// not a dir and not a regular file
-				return current_dir("not a dir and not a regular file", true);
-			},
-			[](const std::string& e) {
-				unused(e);
-				return current_dir("operation on error dir", true);
+				return current_dir(data.dir_path, data.dirs.erase(index_of_file), data.regular_files);
 			}
-	}, m_data);
+			else if (f.is_regular()) {
+				// delete a regular file
+				auto index_of_file = regular_file_index(f.name());
+
+				if (index_of_file == num_of_regular_files()) {
+				// regular file doesn't exist
+				return current_dir("regular file doesn't exist", true);
+				}
+
+				return current_dir(data.dir_path, data.dirs, data.regular_files.erase(index_of_file));
+			}
+
+			// not a dir and not a regular file
+			return current_dir("not a dir and not a regular file", true);
+	};
+
+	return visit<current_dir, std::string, bool>(fmap(m_data, f1), "operation on error dir", true);
 }
 
 std::size_t current_dir::file_index(const std::string &file_name) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				unused(data);
+	auto f = [&](const current_dir::data& data) {
+		unused(data);
 
-				// try to find a file in regular files
-				auto index_of_file = regular_file_index(file_name);
+		// try to find a file in regular files
+		auto index_of_file = regular_file_index(file_name);
 
-				if (index_of_file != num_of_regular_files())
-				return num_of_dirs() + index_of_file;
+		if (index_of_file != num_of_regular_files())
+		return num_of_dirs() + index_of_file;
 
-				// try to find a file in dirs
-				index_of_file = dir_index(file_name);
+		// try to find a file in dirs
+		index_of_file = dir_index(file_name);
 
-				if (index_of_file != num_of_dirs())
-				return index_of_file;
+		if (index_of_file != num_of_dirs())
+		return index_of_file;
 
-				// file not found
-				return num_of_files();
-			},
-			[](const std::string& e) {
-				unused(e);
-				return std::size_t(0);
-			}
-	}, m_data);
+		// file not found
+		return num_of_files();
+	};
+
+	return visit<std::size_t>(fmap(m_data, f));
 }
 
 std::size_t current_dir::regular_file_index(const std::string& file_name) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return binary_search(file_name, data.regular_files);
-			},
-			[](const std::string& e) {
-				unused(e);
-				return std::size_t(0);
-			}
-	}, m_data);
+	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.regular_files); };
+	return visit<std::size_t>(fmap(m_data, f));
 }
 
 std::size_t current_dir::dir_index(const std::string& file_name) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return binary_search(file_name, data.dirs);
-			},
-			[](const std::string& e) {
-				unused(e);
-				return std::size_t(0);
-			}
-	}, m_data);
+	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.dirs); };
+	return visit<std::size_t>(fmap(m_data, f));
 }
 
 std::size_t current_dir::num_of_regular_files() const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return data.regular_files.size();
-			},
-			[](const std::string& e) {
-				unused(e);
-				return std::size_t(0);
-			}
-	}, m_data);
+	auto f = [](const current_dir::data& data) { return data.regular_files.size(); };
+	return visit<std::size_t>(fmap(m_data, f));
 }
 
 std::size_t current_dir::num_of_dirs() const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return data.dirs.size();
-			},
-			[](const std::string& e) {
-				unused(e);
-				return std::size_t(0);
-			}
-	}, m_data);
+	auto f = [](const current_dir::data& data) { return data.dirs.size(); };
+	return visit<std::size_t>(fmap(m_data, f));
 }
 
 std::size_t current_dir::num_of_files() const
@@ -324,55 +322,31 @@ std::size_t current_dir::num_of_files() const
 
 optional_ref<const fs::path> current_dir::path() const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return optional_ref<const fs::path>{data.dir_path};
-			},
-			[](const std::string& e) {
-				unused(e);
-				return optional_ref<const fs::path>();
-			}
-	}, m_data);
+	auto f = [](const current_dir::data& data) { return optional_ref<const fs::path>{data.dir_path}; };
+	return visit<optional_ref<const fs::path>>(fmap(m_data, f));
 }
 
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				if (i < num_of_dirs())
-					return optional_ref<const file>{data.dirs[i]};
+	auto f = [&](const current_dir::data& data) { 
+		if (i < num_of_dirs())
+			return optional_ref<const file>{data.dirs[i]};
+		return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
+	};
 
-				return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
-			},
-			[](const std::string& e) {
-				unused(e);
-				return optional_ref<const file>();
-			}
-	}, m_data);
+	return visit<optional_ref<const file>>(fmap(m_data, f));
 }
 
 optional_ref<const file> current_dir::regular_file_by_index(unsigned i) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return optional_ref<const file>{data.regular_files[i]};
-			},
-			[](const std::string& e) {
-				unused(e);
-				return optional_ref<const file>();
-			}
-	}, m_data);
+	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.regular_files[i]}; };
+
+	return visit<optional_ref<const file>>(fmap(m_data, f));
 }
 
 optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 {
-	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return optional_ref<const file>{data.dirs[i]};
-			},
-			[](const std::string& e) {
-				unused(e);
-				return optional_ref<const file>();
-			}
-	}, m_data);
+	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.dirs[i]}; };
+
+	return visit<optional_ref<const file>>(fmap(m_data, f));
 }
