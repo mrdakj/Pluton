@@ -25,20 +25,6 @@ auto fmap(V&& var, F&& f)
 	}, var);
 }
 
-template <class T>
-auto visit(auto&& var)
-{
-	return std::visit(overloaded {
-			[](const T& result) {
-				return result;
-			},
-			[](const std::string& e) {
-				unused(e);
-				return T{};
-			}
-	}, var);
-}
-
 template <class T, class... Args>
 auto visit(auto&& var, Args... args)
 {
@@ -187,7 +173,7 @@ current_dir current_dir::rename(const file& f, const std::string& new_file_name)
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	return visit<current_dir, std::string, bool>(fmap(m_data, f1), "operation on error dir", true);
+	return visit<current_dir>(fmap(m_data, f1), "operation on error dir", true);
 }
 
 
@@ -231,7 +217,7 @@ current_dir current_dir::insert_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	return visit<current_dir, std::string, bool>(fmap(m_data, f1), "operation on error dir", true);
+	return visit<current_dir>(fmap(m_data, f1), "operation on error dir", true);
 }
 
 current_dir current_dir::delete_file(const file& f) const
@@ -264,7 +250,7 @@ current_dir current_dir::delete_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	return visit<current_dir, std::string, bool>(fmap(m_data, f1), "operation on error dir", true);
+	return visit<current_dir>(fmap(m_data, f1), "operation on error dir", true);
 }
 
 std::size_t current_dir::file_index(const std::string &file_name) const
