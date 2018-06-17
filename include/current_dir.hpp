@@ -22,9 +22,10 @@ class current_dir {
 
 		std::variant<data, std::string> m_data;
 
-		current_dir() {}
 		current_dir(const std::string& dir_path, immer::flex_vector<file> dirs, immer::flex_vector<file> regular_files);
 	public:
+
+		current_dir() {}
 		current_dir(const std::string& dir_path, bool error_flag = false);
 
 		optional_ref<const fs::path> path() const;

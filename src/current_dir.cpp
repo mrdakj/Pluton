@@ -11,28 +11,39 @@
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-template <class V, class F>
-auto fmap(V&& var, F&& f)
+template <
+  typename Variant,
+  typename Func,
+  typename T = std::variant_alternative_t<0, Variant>,
+  typename Error = std::variant_alternative_t<1, Variant>,
+  typename Result = std::invoke_result_t<Func, T>
+>
+std::variant<Result, Error> fmap(const Variant& var, const Func& f)
 {
-	decltype(std::invoke(f, current_dir::data())) t;
 	return std::visit(overloaded {
-			[&](const current_dir::data& data) {
-				return std::variant<decltype(t), std::string>(f(data));
+			[&](const T& data) {
+				return std::variant<Result, Error>(f(data));
 			},
-			[](const std::string& e) {
-				return std::variant<decltype(t), std::string>(e);
+			[](const Error& message) {
+				return std::variant<Result, Error>(message);
 			}
 	}, var);
 }
 
-template <class T, class... Args>
-auto visit(auto&& var, Args... args)
+
+template <
+	typename Variant,
+	typename... Args,
+	typename T = std::variant_alternative_t<0, Variant>,
+	typename Error = std::variant_alternative_t<1, Variant>
+>
+T visit(const Variant& var, Args... args)
 {
 	return std::visit(overloaded {
 			[](const T& result) {
 				return result;
 			},
-			[&](const std::string& e) {
+			[&](const Error& e) {
 				unused(e);
 				return T{args...};
 			}
@@ -173,7 +184,8 @@ current_dir current_dir::rename(const file& f, const std::string& new_file_name)
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	return visit<current_dir>(fmap(m_data, f1), "operation on error dir", true);
+	auto x = fmap<decltype(m_data), decltype(f1)>(m_data, f1);
+	return visit<decltype(x)>(x);
 }
 
 
@@ -217,7 +229,8 @@ current_dir current_dir::insert_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	return visit<current_dir>(fmap(m_data, f1), "operation on error dir", true);
+	auto x = fmap<decltype(m_data), decltype(f1)>(m_data, f1);
+	return visit<decltype(x)>(x);
 }
 
 current_dir current_dir::delete_file(const file& f) const
@@ -250,7 +263,8 @@ current_dir current_dir::delete_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	return visit<current_dir>(fmap(m_data, f1), "operation on error dir", true);
+	auto x = fmap<decltype(m_data), decltype(f1)>(m_data, f1);
+	return visit<decltype(x)>(x);
 }
 
 std::size_t current_dir::file_index(const std::string &file_name) const
@@ -274,31 +288,36 @@ std::size_t current_dir::file_index(const std::string &file_name) const
 		return num_of_files();
 	};
 
-	return visit<std::size_t>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 std::size_t current_dir::regular_file_index(const std::string& file_name) const
 {
 	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.regular_files); };
-	return visit<std::size_t>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 std::size_t current_dir::dir_index(const std::string& file_name) const
 {
 	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.dirs); };
-	return visit<std::size_t>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 std::size_t current_dir::num_of_regular_files() const
 {
 	auto f = [](const current_dir::data& data) { return data.regular_files.size(); };
-	return visit<std::size_t>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 std::size_t current_dir::num_of_dirs() const
 {
 	auto f = [](const current_dir::data& data) { return data.dirs.size(); };
-	return visit<std::size_t>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 std::size_t current_dir::num_of_files() const
@@ -309,7 +328,8 @@ std::size_t current_dir::num_of_files() const
 optional_ref<const fs::path> current_dir::path() const
 {
 	auto f = [](const current_dir::data& data) { return optional_ref<const fs::path>{data.dir_path}; };
-	return visit<optional_ref<const fs::path>>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
@@ -320,19 +340,22 @@ optional_ref<const file> current_dir::file_by_index(unsigned i) const
 		return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
 	};
 
-	return visit<optional_ref<const file>>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 optional_ref<const file> current_dir::regular_file_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.regular_files[i]}; };
 
-	return visit<optional_ref<const file>>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
 
 optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.dirs[i]}; };
 
-	return visit<optional_ref<const file>>(fmap(m_data, f));
+	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
+	return visit<decltype(x)>(x);
 }
