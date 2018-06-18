@@ -6,48 +6,61 @@
 #include <optional>
 #include <range/v3/view.hpp>
 #include <range/v3/action/sort.hpp>
+#include <type_traits>
+
 #define unused(x) ((void)x)
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
+template <class T>
+struct remove_cvref {
+    typedef std::remove_cv_t<std::remove_reference_t<T>> type;
+};
+
+template <class T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+
+// NOTE: std::remove_cvref since C++20
+
 template <
   typename Variant,
   typename Func,
-  typename T = std::variant_alternative_t<0, Variant>,
-  typename Error = std::variant_alternative_t<1, Variant>,
+  typename T = std::variant_alternative_t<0, remove_cvref_t<Variant>>,
+  typename Error = std::variant_alternative_t<1, remove_cvref_t<Variant>>,
   typename Result = std::invoke_result_t<Func, T>
 >
-std::variant<Result, Error> fmap(const Variant& var, const Func& f)
+std::variant<Result, Error> fmapv(Variant&& var, Func&& f)
 {
 	return std::visit(overloaded {
-			[&](const T& data) {
-				return std::variant<Result, Error>(f(data));
+			[&f](const T& data) { // Will f be correctly forwarded inside lambda?
+				return std::variant<Result, Error>(std::forward<Func>(f)(data));
 			},
 			[](const Error& message) {
 				return std::variant<Result, Error>(message);
 			}
-	}, var);
+	}, std::forward<Variant>(var));
 }
 
 
 template <
 	typename Variant,
 	typename... Args,
-	typename T = std::variant_alternative_t<0, Variant>,
-	typename Error = std::variant_alternative_t<1, Variant>
+	typename T = std::variant_alternative_t<0, remove_cvref_t<Variant>>,
+	typename Error = std::variant_alternative_t<1, remove_cvref_t<Variant>>
 >
-T visit(const Variant& var, Args... args)
+T cast(Variant&& var, Args&&... args)
 {
 	return std::visit(overloaded {
 			[](const T& result) {
 				return result;
 			},
-			[&](const Error& e) {
+			[&args...](const Error& e) {
 				unused(e);
-				return T{args...};
+				return T{std::forward<Args>(args)...};
 			}
-	}, var);
+	}, std::forward<Variant>(var));
 }
 
 template<class ForwardIt, class T, class Compare=std::less<>>
@@ -184,8 +197,8 @@ current_dir current_dir::rename(const file& f, const std::string& new_file_name)
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	auto x = fmap<decltype(m_data), decltype(f1)>(m_data, f1);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f1);
+	return cast(x);
 }
 
 
@@ -229,8 +242,8 @@ current_dir current_dir::insert_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	auto x = fmap<decltype(m_data), decltype(f1)>(m_data, f1);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f1);
+	return cast(x);
 }
 
 current_dir current_dir::delete_file(const file& f) const
@@ -263,8 +276,8 @@ current_dir current_dir::delete_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	auto x = fmap<decltype(m_data), decltype(f1)>(m_data, f1);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f1);
+	return cast(x);
 }
 
 std::size_t current_dir::file_index(const std::string &file_name) const
@@ -288,36 +301,36 @@ std::size_t current_dir::file_index(const std::string &file_name) const
 		return num_of_files();
 	};
 
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 std::size_t current_dir::regular_file_index(const std::string& file_name) const
 {
 	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.regular_files); };
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 std::size_t current_dir::dir_index(const std::string& file_name) const
 {
 	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.dirs); };
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 std::size_t current_dir::num_of_regular_files() const
 {
 	auto f = [](const current_dir::data& data) { return data.regular_files.size(); };
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 std::size_t current_dir::num_of_dirs() const
 {
 	auto f = [](const current_dir::data& data) { return data.dirs.size(); };
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 std::size_t current_dir::num_of_files() const
@@ -328,8 +341,8 @@ std::size_t current_dir::num_of_files() const
 optional_ref<const fs::path> current_dir::path() const
 {
 	auto f = [](const current_dir::data& data) { return optional_ref<const fs::path>{data.dir_path}; };
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
@@ -340,22 +353,22 @@ optional_ref<const file> current_dir::file_by_index(unsigned i) const
 		return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
 	};
 
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 optional_ref<const file> current_dir::regular_file_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.regular_files[i]}; };
 
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
 
 optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.dirs[i]}; };
 
-	auto x = fmap<decltype(m_data), decltype(f)>(m_data, f);
-	return visit<decltype(x)>(x);
+	auto x = fmapv(m_data, f);
+	return cast(x);
 }
