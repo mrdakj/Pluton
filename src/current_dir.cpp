@@ -43,6 +43,9 @@ std::variant<Result, Error> fmapv(Variant&& var, Func&& f)
 	}, std::forward<Variant>(var));
 }
 
+bool operator< (const std::pair<int, std::string>& lhs, const std::pair<int, std::string>& rhs) {
+    return lhs.first<rhs.first || (!(rhs.first<lhs.first) && lhs.second<rhs.second); 
+};
 
 template <
 	typename Variant,
@@ -197,8 +200,7 @@ current_dir current_dir::rename(const file& f, const std::string& new_file_name)
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	auto x = fmapv(m_data, f1);
-	return cast(x);
+	return cast(fmapv(m_data, f1), "operation on error dir", true);
 }
 
 
@@ -242,8 +244,7 @@ current_dir current_dir::insert_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	auto x = fmapv(m_data, f1);
-	return cast(x);
+	return cast(fmapv(m_data, f1), "operation on error dir", true);
 }
 
 current_dir current_dir::delete_file(const file& f) const
@@ -276,8 +277,7 @@ current_dir current_dir::delete_file(const file& f) const
 			return current_dir("not a dir and not a regular file", true);
 	};
 
-	auto x = fmapv(m_data, f1);
-	return cast(x);
+	return cast(fmapv(m_data, f1), "operation on error dir", true);
 }
 
 std::size_t current_dir::file_index(const std::string &file_name) const
@@ -301,36 +301,31 @@ std::size_t current_dir::file_index(const std::string &file_name) const
 		return num_of_files();
 	};
 
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 std::size_t current_dir::regular_file_index(const std::string& file_name) const
 {
 	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.regular_files); };
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 std::size_t current_dir::dir_index(const std::string& file_name) const
 {
 	auto f = [&](const current_dir::data& data) { return binary_search(file_name, data.dirs); };
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 std::size_t current_dir::num_of_regular_files() const
 {
 	auto f = [](const current_dir::data& data) { return data.regular_files.size(); };
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 std::size_t current_dir::num_of_dirs() const
 {
 	auto f = [](const current_dir::data& data) { return data.dirs.size(); };
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 std::size_t current_dir::num_of_files() const
@@ -341,8 +336,7 @@ std::size_t current_dir::num_of_files() const
 optional_ref<const fs::path> current_dir::path() const
 {
 	auto f = [](const current_dir::data& data) { return optional_ref<const fs::path>{data.dir_path}; };
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
@@ -353,22 +347,17 @@ optional_ref<const file> current_dir::file_by_index(unsigned i) const
 		return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
 	};
 
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 optional_ref<const file> current_dir::regular_file_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.regular_files[i]}; };
-
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
 
 optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.dirs[i]}; };
-
-	auto x = fmapv(m_data, f);
-	return cast(x);
+	return cast(fmapv(m_data, f));
 }
