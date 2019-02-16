@@ -1,4 +1,5 @@
 #include "current_dir.hpp"
+#include "projections.hpp"
 #include "system.hpp"
 #include <fstream>
 #include <functional>
@@ -43,9 +44,9 @@ std::variant<Result, Error> fmapv(Variant&& var, Func&& f)
 	}, std::forward<Variant>(var));
 }
 
-bool operator< (const std::pair<int, std::string>& lhs, const std::pair<int, std::string>& rhs) {
-    return lhs.first<rhs.first || (!(rhs.first<lhs.first) && lhs.second<rhs.second); 
-};
+// bool operator< (const std::pair<int, std::string>& lhs, const std::pair<int, std::string>& rhs) {
+//     return lhs.first<rhs.first || (!(rhs.first<lhs.first) && lhs.second<rhs.second); 
+// };
 
 template <
 	typename Variant,
@@ -75,14 +76,12 @@ static ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Co
 
 static std::size_t binary_search(const std::string& name, immer::flex_vector<file> v)
 {
-	auto it = binary_find(v.begin(), v.end(), file(name), [](auto&& arg1, auto&& arg2) { return arg1.name() < arg2.name(); });
-	return std::distance(v.begin(), it);
+	return std::distance(v.begin(), binary_find(v.begin(), v.end(), file(name), projecting_fn{std::less{}, &file::name}));
 }
 
 static std::size_t binary_lower(const std::string& name, immer::flex_vector<file> v)
 {
-	auto it = std::lower_bound(v.begin(), v.end(), file(name), [](auto&& arg1, auto&& arg2) { return arg1.name() < arg2.name(); });
-	return std::distance(v.begin(), it);
+	return std::distance(v.begin(), std::lower_bound(v.begin(), v.end(), file(name), projecting_fn{std::less{}, &file::name}));
 }
 
 current_dir::current_dir(const std::string& dir_path, immer::flex_vector<file> dirs, immer::flex_vector<file> regular_files)
@@ -123,7 +122,7 @@ current_dir::current_dir(const std::string& dir_path, bool error_flag)
 				| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_regular_file(entry.path()); })
 				| ranges::v3::view::transform([](const fs::path& path) { return file(path.filename(), REGULAR, fs::file_size(path)); })
 				| ranges::v3::to_vector
-				| ranges::v3::action::sort([](const file& a, const file& b) { return a.name() < b.name(); });
+				| ranges::v3::action::sort(projecting_fn{std::less{}, &file::name});
 
 			data.regular_files = immer::flex_vector<file>{regular_files.begin(), regular_files.end()};
 
@@ -132,7 +131,7 @@ current_dir::current_dir(const std::string& dir_path, bool error_flag)
 				| ranges::v3::view::filter([] (const fs::directory_entry& entry) { return fs::is_directory(entry.path()); })
 				| ranges::v3::view::transform([](const fs::path& path) { return file(path.filename(), DIRECTORY, std::distance(fs::directory_iterator(path), fs::directory_iterator{})); })
 				| ranges::v3::to_vector
-				| ranges::v3::action::sort([](const file& a, const file& b) { return a.name() < b.name(); });
+				| ranges::v3::action::sort(projecting_fn{std::less{}, &file::name});
 
 			data.dirs = immer::flex_vector<file>{dirs.begin(), dirs.end()};
 
@@ -158,10 +157,7 @@ bool current_dir::is_error_dir() const
 
 current_dir current_dir::cd(const fs::path& dir_path) const
 {
-	if (!fs::is_directory(dir_path))
-		return current_dir("not a dir", true);
-
-	return current_dir(dir_path);
+	return (fs::is_directory(dir_path)) ? current_dir(dir_path) : current_dir("not a dir", true);
 }
 
 
@@ -266,8 +262,8 @@ current_dir current_dir::delete_file(const file& f) const
 				auto index_of_file = regular_file_index(f.name());
 
 				if (index_of_file == num_of_regular_files()) {
-				// regular file doesn't exist
-				return current_dir("regular file doesn't exist", true);
+					// regular file doesn't exist
+					return current_dir("regular file doesn't exist", true);
 				}
 
 				return current_dir(data.dir_path, data.dirs, data.regular_files.erase(index_of_file));
@@ -289,13 +285,13 @@ std::size_t current_dir::file_index(const std::string &file_name) const
 		auto index_of_file = regular_file_index(file_name);
 
 		if (index_of_file != num_of_regular_files())
-		return num_of_dirs() + index_of_file;
+			return num_of_dirs() + index_of_file;
 
 		// try to find a file in dirs
 		index_of_file = dir_index(file_name);
 
 		if (index_of_file != num_of_dirs())
-		return index_of_file;
+			return index_of_file;
 
 		// file not found
 		return num_of_files();
@@ -342,9 +338,7 @@ optional_ref<const fs::path> current_dir::path() const
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { 
-		if (i < num_of_dirs())
-			return optional_ref<const file>{data.dirs[i]};
-		return optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
+		return (i < num_of_dirs()) ? optional_ref<const file>{data.dirs[i]} : optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
 	};
 
 	return cast(fmapv(m_data, f));
