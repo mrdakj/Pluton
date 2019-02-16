@@ -477,13 +477,13 @@ void file_manager_tui::set_items()
 	if (l == r)
 		l = r - height;
 
-	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>> > > menu_items;
+	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>, bool>> menu_items;
 	for (std::size_t i = l; i < r ; i++) {
 		file f = curdir.file_by_index(i).get();
 		if (f.type() == 'd' && fs::exists(curdir.path().get() / f.name())) {
-			menu_items.emplace_back(std::make_tuple(f.name(), chdir(*this, curdir.path().get() / f.name())));
+			menu_items.emplace_back(std::make_tuple(f.name(), chdir(*this, curdir.path().get() / f.name()), true));
 		} else {
-			menu_items.emplace_back(std::make_tuple(f.name(), opt::none));
+			menu_items.emplace_back(std::make_tuple(f.name(), opt::none, false));
 		}
 	}
 
@@ -580,7 +580,7 @@ file_manager_tui::file_manager_tui(current_dir& curdir)
 	confirmation_widget{vlayout_right.make_child<fm_yes_no_menu_widget>()}
 {
 	// path label style 
-	set_background(curdir_path_label, Color::White);
+	set_background(curdir_path_label, Color::Blue);
 	set_foreground(curdir_path_label, Color::Black);
 	curdir_path_label.brush.add_attributes(Attribute::Bold);
 

@@ -1,4 +1,5 @@
 #include "tui_fm_menu.hpp"
+#include <algorithm>
 #include <fstream>
 #define unused(x) ((void)x)
 
@@ -10,18 +11,17 @@ fm_menu::fm_menu()
 	focus_policy = Focus_policy::Strong;
 }
 
-void fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>>> &items) 
+void fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>, bool>> &items) 
 {
 	clear();
 	for_each(items.cbegin(), items.cend(), [this](auto item) {
-			auto & sig = add_item(std::get<0>(item));
+			auto & sig = add_item(std::get<0>(item),std::get<2>(item));
 
 			auto& opt_slot = std::get<1>(item);
 			if (opt_slot != opt::none)
 				sig.connect(opt_slot.value());
 	});
 }
-
 
 sig::Signal<void()>& fm_menu::add_item(Glyph_string label)
 {
@@ -31,8 +31,26 @@ sig::Signal<void()>& fm_menu::add_item(Glyph_string label)
 	button_ref.height_policy.type(Size_policy::Fixed);
 	button_ref.height_policy.hint(1);
 	auto& signal_ref{items_.back().selected};
-	button_ref.clicked.connect(
-			[this, index = items_.size() - 1] { items_[index].selected(); });
+	button_ref.clicked.connect([this, index = items_.size() - 1] { items_[index].selected(); });
+
+	update();
+	return signal_ref;
+}
+
+sig::Signal<void()>& fm_menu::add_item(Glyph_string label, bool is_dir)
+{
+	Push_button& button_ref{make_child<Push_button>(std::move(label))};
+	if (is_dir)
+		button_ref.brush.set_foreground(Color::Blue);
+	else
+		button_ref.brush.set_foreground(Color::Green);
+
+	button_ref.install_event_filter(this);
+	items_.emplace_back(button_ref);
+	button_ref.height_policy.type(Size_policy::Fixed);
+	button_ref.height_policy.hint(1);
+	auto& signal_ref{items_.back().selected};
+	button_ref.clicked.connect([this, index = items_.size() - 1] { items_[index].selected(); });
 
 	update();
 	return signal_ref;
@@ -116,7 +134,9 @@ void fm_menu::select_item(std::size_t index)
 		return;
 	}
 
+	// set_foreground(items_[selected_index_].button.get(), Color::White);
 	selected_index_ = (index >= items_.size()) ? items_.size() - 1 : index;
+	// set_foreground(items_[selected_index_].button.get(), Color::Yellow);
 
 	selected_item_changed();
 	update();
@@ -150,11 +170,14 @@ bool fm_menu::paint_event()
 	if (items_.empty())
 		return Vertical_layout::paint_event();
 
+	// remove previous styles (colors...)
 	for (fm_menu_item& item : items_) {
 		item.button.get().brush.remove_attribute(Attribute::Inverse);
 	}
 
+	// set new styles for selected button
 	items_[selected_index_].button.get().brush.add_attributes(Attribute::Inverse);
+
 	return Vertical_layout::paint_event();
 }
 
