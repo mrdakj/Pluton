@@ -11,11 +11,11 @@ fm_menu::fm_menu()
 	focus_policy = Focus_policy::Strong;
 }
 
-void fm_menu::set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>, bool>> &items) 
+void fm_menu::set_items(const std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> &items) 
 {
 	clear();
 	for_each(items.cbegin(), items.cend(), [this](auto item) {
-			auto & sig = add_item(std::get<0>(item),std::get<2>(item));
+			auto & sig = add_item(std::get<0>(item).name(), std::get<0>(item).is_dir());
 
 			auto& opt_slot = std::get<1>(item);
 			if (opt_slot != opt::none)

@@ -28,7 +28,9 @@ class current_dir {
 		current_dir() {}
 		current_dir(const std::string& dir_path, bool error_flag = false);
 
+		// optional is because of const in path
 		optional_ref<const fs::path> path() const;
+		fs::path path(const file& f) const;
 
 		std::size_t num_of_files() const;
 		std::size_t num_of_regular_files() const;

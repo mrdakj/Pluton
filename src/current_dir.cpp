@@ -335,10 +335,18 @@ optional_ref<const fs::path> current_dir::path() const
 	return cast(fmapv(m_data, f));
 }
 
+fs::path current_dir::path(const file& f) const
+{
+	auto func = [&f](const current_dir::data& data) { return data.dir_path / f.name(); };
+	return cast(fmapv(m_data, func));
+}
+
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { 
-		return (i < num_of_dirs()) ? optional_ref<const file>{data.dirs[i]} : optional_ref<const file>{data.regular_files[i-data.dirs.size()]};
+		return (i < num_of_dirs()) ? optional_ref<const file>{data.dirs[i]} 
+				: (i-data.dirs.size() < num_of_regular_files()) ? optional_ref<const file>{data.regular_files[i-data.dirs.size()]} 
+				: optional_ref<const file>{};
 	};
 
 	return cast(fmapv(m_data, f));
@@ -346,12 +354,14 @@ optional_ref<const file> current_dir::file_by_index(unsigned i) const
 
 optional_ref<const file> current_dir::regular_file_by_index(unsigned i) const
 {
-	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.regular_files[i]}; };
+	auto f = [&](const current_dir::data& data) {
+		return (i < num_of_regular_files()) ? optional_ref<const file>{data.regular_files[i]} : optional_ref<const file>{}; };
 	return cast(fmapv(m_data, f));
 }
 
 optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 {
-	auto f = [&](const current_dir::data& data) { return optional_ref<const file>{data.dirs[i]}; };
+	auto f = [&](const current_dir::data& data) {
+		return (i < num_of_dirs()) ? optional_ref<const file>{data.dirs[i]} : optional_ref<const file>{}; };
 	return cast(fmapv(m_data, f));
 }

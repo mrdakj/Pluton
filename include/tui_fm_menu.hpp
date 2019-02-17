@@ -1,6 +1,7 @@
 #ifndef TUI_FM_MENU
 #define TUI_FM_MENU
 
+#include "file.hpp"
 #include <vector>
 #include <signals/slot.hpp>
 #include <cppurses/widget/layouts/vertical_layout.hpp>
@@ -44,7 +45,7 @@ class fm_menu : public Vertical_layout {
 		void clear();
 		void select_up(std::size_t n = 1);
 		void select_down(std::size_t n = 1);
-		void set_items(const std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>, bool>> &items);
+		void set_items(const std::vector< std::tuple<file, opt::Optional<sig::Slot<void()>>>> &items);
 		void call_current_item() const;
 		virtual std::size_t menu_height() const;
 		std::size_t size() const;

@@ -477,13 +477,14 @@ void file_manager_tui::set_items()
 	if (l == r)
 		l = r - height;
 
-	std::vector< std::tuple<const Glyph_string, opt::Optional<sig::Slot<void()>>, bool>> menu_items;
+	std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items;
 	for (std::size_t i = l; i < r ; i++) {
 		file f = curdir.file_by_index(i).get();
-		if (f.type() == 'd' && fs::exists(curdir.path().get() / f.name())) {
-			menu_items.emplace_back(std::make_tuple(f.name(), chdir(*this, curdir.path().get() / f.name()), true));
+		fs::path abs_path = curdir.path(f);
+		if (f.type() == 'd' && fs::exists(abs_path)) {
+			menu_items.emplace_back(std::make_tuple(f, chdir(*this, std::move(abs_path))));
 		} else {
-			menu_items.emplace_back(std::make_tuple(f.name(), opt::none, false));
+			menu_items.emplace_back(std::make_tuple(f, opt::none));
 		}
 	}
 
