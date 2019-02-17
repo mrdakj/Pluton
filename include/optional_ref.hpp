@@ -20,12 +20,10 @@ public:
 		return m_data == nullptr;
 	}
 
-	T get() const
+	T& get() const
 	{
-		if (m_data != nullptr)
-			return *m_data;
-
-		return T();
+		// throw something if m_data is null?
+		return *m_data;
 	}
 
 	operator bool() const

@@ -11,6 +11,7 @@
 int main()
 {
 	current_dir d(fs::absolute(""));
+	// current_dir d(fs::absolute("test_dir"));
 
 	file_manager_tui fm(d);	
 

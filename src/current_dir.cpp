@@ -341,6 +341,12 @@ fs::path current_dir::path(const file& f) const
 	return cast(fmapv(m_data, func));
 }
 
+fs::path current_dir::path(const std::string& file_name) const
+{
+	auto f = [&file_name](const current_dir::data& data) { return data.dir_path / file_name; };
+	return cast(fmapv(m_data, f));
+}
+
 optional_ref<const file> current_dir::file_by_index(unsigned i) const
 {
 	auto f = [&](const current_dir::data& data) { 
@@ -365,3 +371,4 @@ optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 		return (i < num_of_dirs()) ? optional_ref<const file>{data.dirs[i]} : optional_ref<const file>{}; };
 	return cast(fmapv(m_data, f));
 }
+

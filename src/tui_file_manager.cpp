@@ -2,6 +2,7 @@
 #include "tui_fm_text_input.hpp"
 #include "tui_fm_yes_no_menu_widget.hpp"
 #include "system.hpp"
+#include <iostream>
 
 
 // exit application slot
@@ -62,7 +63,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 				auto new_dir = fm.curdir.delete_file(file);
 
 				if (!new_dir.is_error_dir()) {
-					sys::remove_from_system(fm.curdir.path().get() / file.name());
+					sys::remove_from_system(fm.curdir.path(file));
 					fm.set_directory(new_dir, true, fm.offset);
 					fm.flisting.select_item(new_index);
 				}
@@ -71,7 +72,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 				if (fm.offset == 0) {
 					auto new_dir = fm.curdir.delete_file(file);
 					if (!new_dir.is_error_dir()) {
-						sys::remove_from_system(fm.curdir.path().get() / file.name());
+						sys::remove_from_system(fm.curdir.path(file));
 						fm.set_directory(fm.curdir.delete_file(file), true, fm.offset);
 						fm.flisting.select_item(0);
 					}
@@ -79,7 +80,7 @@ sig::Slot<void()> delete_file(file_manager_tui& fm)
 				else {
 					auto new_dir = fm.curdir.delete_file(file);
 					if (!new_dir.is_error_dir()) {
-						sys::remove_from_system(fm.curdir.path().get() / file.name());
+						sys::remove_from_system(fm.curdir.path(file));
 						fm.set_directory(fm.curdir.delete_file(file), true, fm.offset-1);
 						fm.flisting.select_item(fm.flisting.size()-1);
 					}
@@ -131,7 +132,7 @@ sig::Slot<void()> insert_rfile(file_manager_tui& fm)
 			auto new_dir = fm.curdir.insert_file(file(text_new_name, REGULAR));
 
 			if (!new_dir.is_error_dir()) {
-				sys::insert_rfile_on_system(fm.curdir.path().get() / text_new_name);
+				sys::insert_rfile_on_system(fm.curdir.path(text_new_name));
 
 				int index = new_dir.file_index(text_new_name);
 				auto height = fm.flisting.menu_height();
@@ -197,7 +198,7 @@ sig::Slot<void()> insert_dir(file_manager_tui& fm)
 			auto new_dir = fm.curdir.insert_file(file(text_new_name, DIRECTORY));
 
 			if (!new_dir.is_error_dir()) {
-				sys::insert_dir_on_system(fm.curdir.path().get() / text_new_name);
+				sys::insert_dir_on_system(fm.curdir.path(text_new_name));
 				int index = new_dir.file_index(text_new_name);
 				auto height = fm.flisting.menu_height();
 
@@ -274,7 +275,7 @@ sig::Slot<void()> rename_selected(file_manager_tui& fm)
 			auto new_dir = fm.curdir.rename(selected_file, text_new_name);
 
 			if (!new_dir.is_error_dir()) {
-				sys::rename_on_system(fm.curdir.path().get() / selected_file.name(), fm.curdir.path().get() / text_new_name); // important to be before set_directory so one can cd into renamed dir
+				sys::rename_on_system(fm.curdir.path(selected_file), fm.curdir.path(text_new_name)); // important to be before set_directory so one can cd into renamed dir
 				int index = new_dir.file_index(text_new_name);
 				auto height = fm.flisting.menu_height();
 
@@ -402,7 +403,7 @@ sig::Slot<void()> exec_command(file_manager_tui& fm)
 
 			auto selected_file = fm.curdir.file_by_index(fm.offset+fm.flisting.selected_index()).get();
 			std::string file_name = selected_file.name();
-			fs::path file_path = fm.curdir.path().get() / file_name;
+			fs::path file_path = fm.curdir.path(file_name);
 			std::stringstream ss1;
 
 			ss1 <<"cat /usr/share/applications/"<<command<<".desktop 2> /dev/null | grep Terminal>result_pluton";
@@ -477,14 +478,18 @@ void file_manager_tui::set_items()
 	if (l == r)
 		l = r - height;
 
+	// for (auto it = curdir.begin(); it != curdir.end(); it++)
+	// 	std::cout << (*it).name() << std::endl;
+	// std::cout << curdir.begin()->name() << std::endl;
+
 	std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items;
 	for (std::size_t i = l; i < r ; i++) {
-		file f = curdir.file_by_index(i).get();
+		const file& f = curdir.file_by_index(i).get();
 		fs::path abs_path = curdir.path(f);
-		if (f.type() == 'd' && fs::exists(abs_path)) {
-			menu_items.emplace_back(std::make_tuple(f, chdir(*this, std::move(abs_path))));
+		if (f.is_dir() && fs::exists(abs_path)) {
+			menu_items.emplace_back(f, chdir(*this, std::move(abs_path)));
 		} else {
-			menu_items.emplace_back(std::make_tuple(f, opt::none));
+			menu_items.emplace_back(f, opt::none);
 		}
 	}
 
@@ -581,7 +586,7 @@ file_manager_tui::file_manager_tui(current_dir& curdir)
 	confirmation_widget{vlayout_right.make_child<fm_yes_no_menu_widget>()}
 {
 	// path label style 
-	set_background(curdir_path_label, Color::Blue);
+	set_background(curdir_path_label, Color::White);
 	set_foreground(curdir_path_label, Color::Black);
 	curdir_path_label.brush.add_attributes(Attribute::Bold);
 
