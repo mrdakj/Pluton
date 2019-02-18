@@ -2,6 +2,7 @@
 #include "tui_fm_text_input.hpp"
 #include "tui_fm_yes_no_menu_widget.hpp"
 #include "system.hpp"
+#include "projections.hpp"
 #include <iostream>
 
 
@@ -462,6 +463,7 @@ sig::Slot<void()> exec_command(file_manager_tui& fm)
 
 void file_manager_tui::set_items()
 {
+	// FIX problem when resizing from smaller window to bigger one
 	auto height = flisting.menu_height();
 	auto num_of_files = curdir.num_of_files();
 
@@ -478,20 +480,18 @@ void file_manager_tui::set_items()
 	if (l == r)
 		l = r - height;
 
-	// for (auto it = curdir.begin(); it != curdir.end(); it++)
-	// 	std::cout << (*it).name() << std::endl;
-	// std::cout << curdir.begin()->name() << std::endl;
+	// std::ofstream out("/home/jelena/GitHub/Pluton/log.txt");
+	// out << l << std::endl;
+	// out << "offset=" << offset << std::endl;
+	// out << "height=" << height << std::endl;
+	// out << "numoffiles=" << num_of_files << std::endl;
 
 	std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items;
-	for (std::size_t i = l; i < r ; i++) {
-		const file& f = curdir.file_by_index(i).get();
-		fs::path abs_path = curdir.path(f);
-		if (f.is_dir() && fs::exists(abs_path)) {
-			menu_items.emplace_back(f, chdir(*this, std::move(abs_path)));
-		} else {
-			menu_items.emplace_back(f, opt::none);
-		}
-	}
+
+	std::transform(curdir.dir_begin(l), curdir.dir_begin(r), std::back_inserter(menu_items), [&](auto&& f) { return std::make_tuple(f, chdir(*this, curdir.path(f))); });
+
+	std::transform(curdir.reg_begin(l), curdir.reg_begin(r), std::back_inserter(menu_items), [](auto&& f) { return std::make_tuple(f, opt::none); });
+
 
 	flisting.set_items(menu_items);
 }

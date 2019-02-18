@@ -58,6 +58,11 @@ class current_dir {
 
 		bool is_error_dir() const;
 
+		immer::flex_vector<file>::iterator dir_begin(std::size_t offset = 0) const;
+		immer::flex_vector<file>::iterator dir_end() const;
+		immer::flex_vector<file>::iterator reg_begin(std::size_t offset = 0) const;
+		immer::flex_vector<file>::iterator reg_end() const;
+
 		template <class V, class F> friend auto fmap(V&& var, F&& f);
 };
 
