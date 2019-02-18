@@ -1,3 +1,6 @@
+#ifndef PROJECTIONS_HPP
+#define PROJECTIONS_HPP 
+
 // copied from https://cukic.co/2019/01/22/projections-without-ranges/
 #include <functional>
 #include <iostream>
@@ -73,3 +76,5 @@ private:
 	Function m_function;
 	Projection m_projection;
 };
+
+#endif

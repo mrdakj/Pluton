@@ -4,6 +4,8 @@
 #include "system.hpp"
 #include "projections.hpp"
 #include <iostream>
+#include <range/v3/view.hpp>
+#include <range/v3/action/sort.hpp>
 
 
 // exit application slot
@@ -456,7 +458,6 @@ sig::Slot<void()> exec_command(file_manager_tui& fm)
 
 	}};
 
-
 	slot.track(fm.destroyed);
 	return slot;
 }
@@ -479,11 +480,13 @@ void file_manager_tui::set_items()
 	if (l == r)
 		l = r - height;
 
+
 	std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items;
 
-	std::transform(curdir.dir_begin(l), curdir.dir_begin(r), std::back_inserter(menu_items), [&](auto&& f) { return std::make_tuple(f, chdir(*this, curdir.path(f))); });
+	 std::transform(curdir.dirs(l), curdir.dirs(r), std::back_inserter(menu_items), [&](auto&& f) { return std::make_tuple(f, chdir(*this, curdir.path(f))); });
 
-	std::transform(curdir.reg_begin(l), curdir.reg_begin(r), std::back_inserter(menu_items), [](auto&& f) { return std::make_tuple(f, opt::none); });
+	 std::transform(curdir.regs(l), curdir.regs(r), std::back_inserter(menu_items), [](auto&& f) { return std::make_tuple(f, opt::none); });
+	
 
 
 	flisting.set_items(menu_items);

@@ -11,7 +11,11 @@
 int main()
 {
 	current_dir d(fs::absolute(""));
-	// current_dir d(fs::absolute("test_dir"));
+
+	// auto x = transform(d, &file::name);
+	// for (auto&& f : x) {
+	// 	std::cout << f << std::endl;
+	// }
 
 	file_manager_tui fm(d);	
 

@@ -1,5 +1,4 @@
 #include "current_dir.hpp"
-#include "projections.hpp"
 #include "system.hpp"
 #include <fstream>
 #include <functional>
@@ -9,63 +8,7 @@
 #include <range/v3/action/sort.hpp>
 #include <type_traits>
 
-#define unused(x) ((void)x)
-
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
-template <class T>
-struct remove_cvref {
-    typedef std::remove_cv_t<std::remove_reference_t<T>> type;
-};
-
-template <class T>
-using remove_cvref_t = typename remove_cvref<T>::type;
-
-
-// NOTE: std::remove_cvref since C++20
-
-template <
-  typename Variant,
-  typename Func,
-  typename T = std::variant_alternative_t<0, remove_cvref_t<Variant>>,
-  typename Error = std::variant_alternative_t<1, remove_cvref_t<Variant>>,
-  typename Result = std::invoke_result_t<Func, T>
->
-std::variant<Result, Error> fmapv(Variant&& var, Func&& f)
-{
-	return std::visit(overloaded {
-			[&f](const T& data) { // Will f be correctly forwarded inside lambda?
-				return std::variant<Result, Error>(std::forward<Func>(f)(data));
-			},
-			[](const Error& message) {
-				return std::variant<Result, Error>(message);
-			}
-	}, std::forward<Variant>(var));
-}
-
-// bool operator< (const std::pair<int, std::string>& lhs, const std::pair<int, std::string>& rhs) {
-//     return lhs.first<rhs.first || (!(rhs.first<lhs.first) && lhs.second<rhs.second); 
-// };
-
-template <
-	typename Variant,
-	typename... Args,
-	typename T = std::variant_alternative_t<0, remove_cvref_t<Variant>>,
-	typename Error = std::variant_alternative_t<1, remove_cvref_t<Variant>>
->
-T cast(Variant&& var, Args&&... args)
-{
-	return std::visit(overloaded {
-			[](const T& result) {
-				return result;
-			},
-			[&args...](const Error& e) {
-				unused(e);
-				return T{std::forward<Args>(args)...};
-			}
-	}, std::forward<Variant>(var));
-}
+using namespace impl_detail;
 
 template<class ForwardIt, class T, class Compare=std::less<>>
 static ForwardIt binary_find(ForwardIt first, ForwardIt last, const T& value, Compare comp={})
@@ -372,25 +315,25 @@ optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 	return cast(fmapv(m_data, f));
 }
 
-immer::flex_vector<file>::iterator current_dir::dir_begin(std::size_t offset) const
+immer::flex_vector<file>::iterator current_dir::dirs(std::size_t offset) const
 {
 	auto f = [&](const current_dir::data& data) { return data.dirs.begin() + std::min(offset, num_of_dirs()); };
 	return cast(fmapv(m_data, f));
 }
 
-immer::flex_vector<file>::iterator current_dir::dir_end() const
+immer::flex_vector<file>::iterator current_dir::dirs_end() const
 {
 	auto f = [&](const current_dir::data& data) { return data.dirs.end(); };
 	return cast(fmapv(m_data, f));
 }
 
-immer::flex_vector<file>::iterator current_dir::reg_begin(std::size_t offset) const
+immer::flex_vector<file>::iterator current_dir::regs(std::size_t offset) const
 {
 	auto f = [&](const current_dir::data& data) { return data.regular_files.begin() + std::max(0, (int)offset-(int)num_of_dirs()); };
 	return cast(fmapv(m_data, f));
 }
 
-immer::flex_vector<file>::iterator current_dir::reg_end() const
+immer::flex_vector<file>::iterator current_dir::regs_end() const
 {
 	auto f = [&](const current_dir::data& data) { return data.regular_files.end(); };
 	return cast(fmapv(m_data, f));
