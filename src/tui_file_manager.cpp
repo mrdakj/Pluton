@@ -463,7 +463,6 @@ sig::Slot<void()> exec_command(file_manager_tui& fm)
 
 void file_manager_tui::set_items()
 {
-	// FIX problem when resizing from smaller window to bigger one
 	auto height = flisting.menu_height();
 	auto num_of_files = curdir.num_of_files();
 
@@ -479,12 +478,6 @@ void file_manager_tui::set_items()
 
 	if (l == r)
 		l = r - height;
-
-	// std::ofstream out("/home/jelena/GitHub/Pluton/log.txt");
-	// out << l << std::endl;
-	// out << "offset=" << offset << std::endl;
-	// out << "height=" << height << std::endl;
-	// out << "numoffiles=" << num_of_files << std::endl;
 
 	std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items;
 
@@ -547,11 +540,7 @@ sig::Slot<void(std::size_t, std::size_t)> reload_items(file_manager_tui &fm)
 			auto old_offset = fm.offset;
 			auto menu_height = fm.flisting.menu_height();
 
-			/* If selected_index_ is out of screen when resized,
-			 * increment offset by index, select it 
-			 * and showi menu items from that position */
-			if (menu_height <= fm.flisting.selected_index())
-				fm.offset += menu_height;
+			fm.offset = ((fm.offset+old_selected_index)/menu_height) * menu_height;
 
 			fm.set_items();
 
