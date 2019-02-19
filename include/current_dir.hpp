@@ -70,6 +70,15 @@ public:
 
 	template <typename Pred>
 	friend auto transform(const current_dir& curdir, Pred&& pred);
+
+	template <typename Pred1, typename Pred2>
+	friend auto transform(const current_dir& curdir, Pred1&& pred_dirs, Pred2&& pred_regs);
+
+	template <typename Pred>
+	friend auto transform(const current_dir& curdir, int start, int end, Pred&& pred);
+
+	template <typename Pred1, typename Pred2>
+	friend auto transform(const current_dir& curdir, int start, int end, Pred1&& pred_dirs, Pred2&& pred_regs);
 };
 
 
@@ -136,10 +145,49 @@ auto transform(const current_dir& curdir, Pred&& pred)
 	auto f = [&](const current_dir::data& data) {
 		return  ranges::v3::view::concat(data.dirs, data.regular_files)
 				| ranges::v3::view::transform(std::forward<Pred>(pred))
-				| ranges::v3::to_vector;
+				// | ranges::v3::to_vector
+				;
 	};
 
 	return impl_detail::cast(impl_detail::fmapv(curdir.m_data, f));
+}
+
+template <typename Pred>
+auto transform(const current_dir& curdir, int start, int end, Pred&& pred)
+{
+	return transform(curdir, std::forward<Pred>(pred))
+			 | ranges::view::drop(start)
+			 | ranges::view::take(end-start)
+			 ;
+}
+
+template <typename Pred1, typename Pred2>
+auto transform(const current_dir& curdir, Pred1&& pred_dirs, Pred2&& pred_regs)
+{
+	auto f = [&](const current_dir::data& data) {
+		auto dirs_transformed = data.dirs
+								| ranges::v3::view::transform(std::forward<Pred1>(pred_dirs))
+								;
+		auto regs_transformed = data.regular_files
+								| ranges::v3::view::transform(std::forward<Pred2>(pred_regs))
+								;
+		return ranges::v3::view::concat(dirs_transformed, regs_transformed)
+				// | ranges::v3::to_vector
+				;
+	};
+
+	return impl_detail::cast(impl_detail::fmapv(curdir.m_data, f));
+}
+
+
+template <typename Pred1, typename Pred2>
+auto transform(const current_dir& curdir, int start, int end, Pred1&& pred_dirs, Pred2&& pred_regs)
+{
+	return transform(curdir, std::forward<Pred1>(pred_dirs), std::forward<Pred2>(pred_regs))
+			 | ranges::view::drop(start)
+			 | ranges::view::take(end-start)
+			 // | ranges::v3::to_vector
+			 ;
 }
 
 #endif /* CURRENT_DIR_HPP */

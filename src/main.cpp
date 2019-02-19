@@ -11,8 +11,7 @@
 int main()
 {
 	current_dir d(fs::absolute(""));
-
-	// auto x = transform(d, &file::name);
+	// auto x = transform(d,[](auto&& d)  { return d.size()+3; }, &file::size);
 	// for (auto&& f : x) {
 	// 	std::cout << f << std::endl;
 	// }

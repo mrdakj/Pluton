@@ -468,7 +468,7 @@ void file_manager_tui::set_items()
 	auto num_of_files = curdir.num_of_files();
 
 	if (offset > num_of_files)
-		offset = num_of_files > height ? num_of_files - height : 0; 
+		offset = (num_of_files > height) ? num_of_files - height : 0; 
 
 	if (offset < height)
 		offset = 0;
@@ -477,17 +477,12 @@ void file_manager_tui::set_items()
 	auto l = offset;
 	auto r = std::min(offset + height, num_of_files);
 
-	if (l == r)
-		l = r - height;
-
-
-	std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items;
-
-	 std::transform(curdir.dirs(l), curdir.dirs(r), std::back_inserter(menu_items), [&](auto&& f) { return std::make_tuple(f, chdir(*this, curdir.path(f))); });
-
-	 std::transform(curdir.regs(l), curdir.regs(r), std::back_inserter(menu_items), [](auto&& f) { return std::make_tuple(f, opt::none); });
+	 std::vector<std::tuple<file, opt::Optional<sig::Slot<void()>>>> menu_items =
+	 transform(curdir, l, r,
+	 			[&](auto&& f) { return std::make_tuple(f, (opt::Optional<sig::Slot<void()>>)chdir(*this, curdir.path(f))); },
+	 			[](auto&& f) { return std::make_tuple(f, opt::none); }
+	 		);
 	
-
 
 	flisting.set_items(menu_items);
 }
@@ -543,7 +538,9 @@ sig::Slot<void(std::size_t, std::size_t)> reload_items(file_manager_tui &fm)
 			auto old_offset = fm.offset;
 			auto menu_height = fm.flisting.menu_height();
 
-			fm.offset = ((fm.offset+old_selected_index)/menu_height) * menu_height;
+
+			fm.offset = (menu_height) ? ((fm.offset+old_selected_index)/menu_height) * menu_height
+								      : 0;
 
 			fm.set_items();
 
