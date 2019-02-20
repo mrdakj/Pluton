@@ -26,6 +26,16 @@ public:
 		return *m_data;
 	}
 
+	bool operator==(const optional_ref& other) const
+	{
+		return &(*m_data) == &(*other.m_data);
+	}
+
+	bool operator!=(const optional_ref& other) const 
+	{
+		return !(*this == other);
+	}
+
 	operator bool() const
 	{ 
 		return m_data != nullptr;

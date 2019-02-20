@@ -26,8 +26,8 @@ private:
 	std::variant<data, std::string> m_data;
 
 	current_dir(const std::string& dir_path, immer::flex_vector<file> dirs, immer::flex_vector<file> regular_files);
-public:
 
+public:
 	current_dir() {}
 	current_dir(const std::string& dir_path, bool error_flag = false);
 
@@ -61,12 +61,71 @@ public:
 
 	bool is_error_dir() const;
 
-	// offset from all files
-	immer::flex_vector<file>::iterator dirs(std::size_t offset = 0) const;
-	immer::flex_vector<file>::iterator dirs_end() const;
-	// offset from all files
-	immer::flex_vector<file>::iterator regs(std::size_t offset = 0) const;
-	immer::flex_vector<file>::iterator regs_end() const;
+	struct iterator {
+        using underlying_vec = immer::flex_vector<file>;
+
+        using reference = typename underlying_vec::reference;
+        using value_type = typename underlying_vec::value_type;
+		using difference_type = typename underlying_vec::difference_type;
+		using pointer = file*;
+		using iterator_category = std::random_access_iterator_tag;
+
+
+		iterator()
+			: m_dirs(), m_regs(), m_pos(0)
+		{
+		}
+
+		iterator(const underlying_vec& dirs, const underlying_vec& regs, std::size_t pos = 0)
+			: m_dirs(dirs), m_regs(regs), m_pos(pos)
+		{
+		}
+
+		const file& operator*() const
+		{
+			auto num_of_dirs = m_dirs.get().size();
+			return (m_pos < num_of_dirs) ? m_dirs.get()[m_pos] : m_regs.get()[m_pos-num_of_dirs];
+		}
+
+		operator bool() const
+		{
+			return m_dirs && m_regs;
+		}
+
+		// ++it
+        iterator& operator++()
+		{
+			++m_pos;
+			return *this;
+		}
+
+		// it++
+        iterator operator++(int)
+		{
+			iterator tmp = *this;
+			++m_pos;
+			return tmp;
+		}
+
+		bool operator==(const iterator& other) const
+		{
+			return (m_pos == other.m_pos) && (m_dirs == other.m_dirs) && (m_regs == other.m_regs); 
+		}
+
+		bool operator!=(const iterator& other) const 
+		{
+			return !(*this == other);
+		}
+		
+		private:
+			// should I use references because it is immer vector?
+			optional_ref<const underlying_vec> m_dirs;
+			optional_ref<const underlying_vec> m_regs;
+			std::size_t m_pos;
+	};
+
+	iterator begin() const;
+	iterator end() const;
 
 	template <typename Pred>
 	friend auto transform(const current_dir& curdir, Pred&& pred);
@@ -80,7 +139,6 @@ public:
 	template <typename Pred1, typename Pred2>
 	friend auto transform(const current_dir& curdir, int start, int end, Pred1&& pred_dirs, Pred2&& pred_regs);
 };
-
 
 
 
@@ -137,7 +195,7 @@ namespace impl_detail {
 				}
 		}, std::forward<Variant>(var));
 	}
-}; // end of impl_detail
+}; // namespace impl_detail
 
 template <typename Pred>
 auto transform(const current_dir& curdir, Pred&& pred)

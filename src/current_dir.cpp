@@ -315,26 +315,14 @@ optional_ref<const file> current_dir::dir_by_index(unsigned i) const
 	return cast(fmapv(m_data, f));
 }
 
-immer::flex_vector<file>::iterator current_dir::dirs(std::size_t offset) const
+current_dir::iterator current_dir::begin() const
 {
-	auto f = [&](const current_dir::data& data) { return data.dirs.begin() + std::min(offset, num_of_dirs()); };
+	auto f = [](const current_dir::data& data) { return iterator{data.dirs, data.regular_files, 0}; };
 	return cast(fmapv(m_data, f));
 }
 
-immer::flex_vector<file>::iterator current_dir::dirs_end() const
+current_dir::iterator current_dir::end() const
 {
-	auto f = [&](const current_dir::data& data) { return data.dirs.end(); };
-	return cast(fmapv(m_data, f));
-}
-
-immer::flex_vector<file>::iterator current_dir::regs(std::size_t offset) const
-{
-	auto f = [&](const current_dir::data& data) { return data.regular_files.begin() + std::max(0, (int)offset-(int)num_of_dirs()); };
-	return cast(fmapv(m_data, f));
-}
-
-immer::flex_vector<file>::iterator current_dir::regs_end() const
-{
-	auto f = [&](const current_dir::data& data) { return data.regular_files.end(); };
+	auto f = [&](const current_dir::data& data) { return iterator{data.dirs, data.regular_files, num_of_files()}; };
 	return cast(fmapv(m_data, f));
 }
